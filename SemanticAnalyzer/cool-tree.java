@@ -146,8 +146,7 @@ abstract class Expression extends TreeNode {
     public AbstractSymbol get_type() { return type; }           
     public Expression set_type(AbstractSymbol s) { type = s; return this; } 
     public abstract void dump_with_types(PrintStream out, int n);
-	ProgramTable programTable;
-	public abstract void analyze(ClassTable classTable, class_c currClass, ProgramTable programTable);
+	public abstract void analyze(ExpressionNode exprNode, ProgramTable programTable);
     public void dump_type(PrintStream out, int n) {
         if (type != null)
             { out.println(Utilities.pad(n) + ": " + type.getString()); }
@@ -191,7 +190,7 @@ abstract class Case extends TreeNode {
         super(lineNumber);
     }
 	ProgramTable programTable;
-	public abstract void analyze(ClassTable classTable, class_c currClass, ProgramTable programTable);
+	public abstract void analyze(ExpressionNode exprNode, ProgramTable programTable);
     public abstract void dump_with_types(PrintStream out, int n);
 
 }
@@ -346,10 +345,12 @@ class class_c extends Class_ {
 
 	public void fillTable (ProgramTable programTable) {
 		/* Respective semantic analysis */
-		programTable.classMap.put(name, new ClassNode(filename, parent));
+		programTable.classMap.put(name, new ClassNode(filename, name, parent, this));
 		for (Enumeration e = features.getElements(); e.hasMoreElements();) {
 	    		((Feature)e.nextElement()).fillTable(this, programTable);
         	}
+
+		programTable.fillFeatures();
 	}
 
 }
@@ -404,7 +405,7 @@ class method extends Feature {
 	public void fillTable (class_c currClass, ProgramTable programTable) {
 		
 		ClassNode classNode = programTable.classMap.get(currClass.getName());
-		classNode.methodMap.put(name, new MethodNode(return_type, expr));
+		classNode.methodMap.put(name, new MethodNode(return_type, name, expr));
 
 		for (Enumeration e = formals.getElements(); e.hasMoreElements();) {
 	    		((Formal)e.nextElement()).fillTable(currClass, name, programTable);
@@ -455,7 +456,7 @@ class attr extends Feature {
 
 	public void fillTable (class_c currClass, ProgramTable programTable) {
 		ClassNode classNode = programTable.classMap.get(currClass.getName());
-		classNode.attributeMap.put(name, new AttributeNode(type_decl, init));
+		classNode.attributeMap.put(name, new AttributeNode(type_decl, name, init));
 		
 	}
 
@@ -545,7 +546,7 @@ class branch extends Case {
 	expr.dump_with_types(out, n + 2);
     }
 
-	public void analyze (ClassTable classTable, class_c currClass, ProgramTable programTable) {
+	public void analyze (ExpressionNode exprNode, ProgramTable programTable) {
 		/* Respective semantic analysis */
 	}
 
@@ -587,10 +588,9 @@ class assign extends Expression {
 	dump_type(out, n);
     }
 
-	public void analyze (ClassTable classTable, class_c currClass, ProgramTable programTable) {
+	public void analyze (ExpressionNode exprNode, ProgramTable programTable) {
 		/* Respective semantic analysis */
-		this.programTable = programTable;
-		expr.analyze(classTable, currClass, programTable);
+		expr.analyze(exprNode, programTable);
 	}
 
 }
@@ -645,12 +645,11 @@ class static_dispatch extends Expression {
 	dump_type(out, n);
     }
 
-	public void analyze (ClassTable classTable, class_c currClass, ProgramTable programTable) {
+	public void analyze (ExpressionNode exprNode, ProgramTable programTable) {
 		/* Respective semantic analysis */
-		this.programTable = programTable;
-		expr.analyze(classTable, currClass, programTable);
+		expr.analyze(exprNode, programTable);
 		for (Enumeration e = actual.getElements(); e.hasMoreElements();) {
-	    	((Expression)e.nextElement()).analyze(classTable, currClass, programTable);
+	    	((Expression)e.nextElement()).analyze(exprNode, programTable);
         }
 	}
 
@@ -701,12 +700,12 @@ class dispatch extends Expression {
 	dump_type(out, n);
     }
 
-	public void analyze (ClassTable classTable, class_c currClass, ProgramTable programTable) {
+	public void analyze (ExpressionNode exprNode, ProgramTable programTable) {
 		/* Respective semantic analysis */
-		this.programTable = programTable;
-		expr.analyze(classTable, currClass, programTable);
+		
+		expr.analyze(exprNode, programTable);;
 		for (Enumeration e = actual.getElements(); e.hasMoreElements();) {
-	    	((Expression)e.nextElement()).analyze(classTable, currClass, programTable);
+	    	((Expression)e.nextElement()).analyze(exprNode, programTable);
        		}
 	}
 
@@ -753,12 +752,12 @@ class cond extends Expression {
 	dump_type(out, n);
     }
 	
-	public void analyze (ClassTable classTable, class_c currClass, ProgramTable programTable) {
+	public void analyze (ExpressionNode exprNode, ProgramTable programTable) {
 		/* Respective semantic analysis */
-		this.programTable = programTable;
-		pred.analyze(classTable, currClass, programTable);
-		then_exp.analyze(classTable, currClass, programTable);
-		else_exp.analyze(classTable, currClass, programTable);
+		
+		pred.analyze(exprNode, programTable);
+		then_exp.analyze(exprNode, programTable);
+		else_exp.analyze(exprNode, programTable);
 	}
 
 }
@@ -799,11 +798,11 @@ class loop extends Expression {
 	dump_type(out, n);
     }
 
-	public void analyze (ClassTable classTable, class_c currClass, ProgramTable programTable) {
+	public void analyze (ExpressionNode exprNode, ProgramTable programTable) {
 		/* Respective semantic analysis */
-		this.programTable = programTable;
-		pred.analyze(classTable, currClass, programTable);
-		body.analyze(classTable, currClass, programTable);
+		
+		pred.analyze(exprNode, programTable);
+		body.analyze(exprNode, programTable);
 	}
 
 }
@@ -846,12 +845,12 @@ class typcase extends Expression {
 		dump_type(out, n);
     }
 
-	public void analyze (ClassTable classTable, class_c currClass, ProgramTable programTable) {
+	public void analyze (ExpressionNode exprNode, ProgramTable programTable) {
 		/* Respective semantic analysis */
-		this.programTable = programTable;
-		expr.analyze(classTable, currClass, programTable);
+		
+		expr.analyze(exprNode, programTable);
 		for (Enumeration e = cases.getElements(); e.hasMoreElements();) {
-	    	((Case)e.nextElement()).analyze(classTable, currClass, programTable);
+	    	((Case)e.nextElement()).analyze(exprNode, programTable);
         }
 	}
 
@@ -890,11 +889,11 @@ class block extends Expression {
 	dump_type(out, n);
     }
 
-	public void analyze (ClassTable classTable, class_c currClass, ProgramTable programTable) {
+	public void analyze (ExpressionNode exprNode, ProgramTable programTable) {
 		/* Respective semantic analysis */
-		this.programTable = programTable;
+		
 		for (Enumeration e = body.getElements(); e.hasMoreElements();) {
-	    	((Expression)e.nextElement()).analyze(classTable, currClass, programTable);
+	    	((Expression)e.nextElement()).analyze(exprNode, programTable);
         }
 	}
 
@@ -946,11 +945,11 @@ class let extends Expression {
 	dump_type(out, n);
     }
 
-	public void analyze (ClassTable classTable, class_c currClass, ProgramTable programTable) {
+	public void analyze (ExpressionNode exprNode, ProgramTable programTable) {
 		/* Respective semantic analysis */
-		this.programTable = programTable;
-	    	init.analyze(classTable, currClass, programTable);
-		body.analyze(classTable, currClass, programTable);
+		
+	    	init.analyze(exprNode, programTable);
+		body.analyze(exprNode, programTable);
 	}
 
 }
@@ -991,11 +990,11 @@ class plus extends Expression {
 	dump_type(out, n);
     }
 
-	public void analyze (ClassTable classTable, class_c currClass, ProgramTable programTable) {
+	public void analyze (ExpressionNode exprNode, ProgramTable programTable) {
 		/* Respective semantic analysis */
-		this.programTable = programTable;
-	    e1.analyze(classTable, currClass, programTable);
-		e2.analyze(classTable, currClass, programTable);
+		
+	    e1.analyze(exprNode, programTable);
+		e2.analyze(exprNode, programTable);
 	}
 
 }
@@ -1036,11 +1035,11 @@ class sub extends Expression {
 	dump_type(out, n);
     }
 
-	public void analyze (ClassTable classTable, class_c currClass, ProgramTable programTable) {
+	public void analyze (ExpressionNode exprNode, ProgramTable programTable) {
 		/* Respective semantic analysis */
-		this.programTable = programTable;
-	    e1.analyze(classTable, currClass, programTable);
-		e2.analyze(classTable, currClass, programTable);
+		
+	    e1.analyze(exprNode, programTable);
+		e2.analyze(exprNode, programTable);
 	}
 }
 
@@ -1080,11 +1079,11 @@ class mul extends Expression {
 	dump_type(out, n);
     }
 
-	public void analyze (ClassTable classTable, class_c currClass, ProgramTable programTable) {
+	public void analyze (ExpressionNode exprNode, ProgramTable programTable) {
 		/* Respective semantic analysis */
-		this.programTable = programTable;
-		e1.analyze(classTable, currClass, programTable);
-		e2.analyze(classTable, currClass, programTable);
+		
+		e1.analyze(exprNode, programTable);
+		e2.analyze(exprNode, programTable);
 	}
 
 }
@@ -1125,11 +1124,11 @@ class divide extends Expression {
 	dump_type(out, n);
     }
 
-	public void analyze (ClassTable classTable, class_c currClass, ProgramTable programTable) {
+	public void analyze (ExpressionNode exprNode, ProgramTable programTable) {
 		/* Respective semantic analysis */
-		this.programTable = programTable;
-	    	e1.analyze(classTable, currClass, programTable);
-		e2.analyze(classTable, currClass, programTable);
+		
+	    	e1.analyze(exprNode, programTable);
+		e2.analyze(exprNode, programTable);
 	}
 
 }
@@ -1165,10 +1164,10 @@ class neg extends Expression {
 	dump_type(out, n);
     }
 
-	public void analyze (ClassTable classTable, class_c currClass, ProgramTable programTable) {
+	public void analyze (ExpressionNode exprNode, ProgramTable programTable) {
 		/* Respective semantic analysis */
-		this.programTable = programTable;
-	    	e1.analyze(classTable, currClass, programTable);
+		
+	    	e1.analyze(exprNode, programTable);
 	}
 
 }
@@ -1209,11 +1208,11 @@ class lt extends Expression {
 	dump_type(out, n);
     }
 
-	public void analyze (ClassTable classTable, class_c currClass, ProgramTable programTable) {
+	public void analyze (ExpressionNode exprNode, ProgramTable programTable) {
 		/* Respective semantic analysis */
-		this.programTable = programTable;
-	    	e1.analyze(classTable, currClass, programTable);
-		e2.analyze(classTable, currClass, programTable);
+		
+	    	e1.analyze(exprNode, programTable);
+		e2.analyze(exprNode, programTable);
 	}
 }
 
@@ -1253,11 +1252,11 @@ class eq extends Expression {
 	dump_type(out, n);
     }
 
-	public void analyze (ClassTable classTable, class_c currClass, ProgramTable programTable) {
+	public void analyze (ExpressionNode exprNode, ProgramTable programTable) {
 		/* Respective semantic analysis */
-		this.programTable = programTable;
-	    	e1.analyze(classTable, currClass, programTable);
-		e2.analyze(classTable, currClass, programTable);
+		
+	    	e1.analyze(exprNode, programTable);
+		e2.analyze(exprNode, programTable);
 	}
 }
 
@@ -1297,11 +1296,11 @@ class leq extends Expression {
 	dump_type(out, n);
     }
 
-	public void analyze (ClassTable classTable, class_c currClass, ProgramTable programTable) {
+	public void analyze (ExpressionNode exprNode, ProgramTable programTable) {
 		/* Respective semantic analysis */
-		this.programTable = programTable;
-	    	e1.analyze(classTable, currClass, programTable);
-		e2.analyze(classTable, currClass, programTable);
+		
+	    	e1.analyze(exprNode, programTable);
+		e2.analyze(exprNode, programTable);
 	}
 }
 
@@ -1336,10 +1335,10 @@ class comp extends Expression {
 	dump_type(out, n);
     }
 
-	public void analyze (ClassTable classTable, class_c currClass, ProgramTable programTable) {
+	public void analyze (ExpressionNode exprNode, ProgramTable programTable) {
 		/* Respective semantic analysis */
-		this.programTable = programTable;
-	    	e1.analyze(classTable, currClass, programTable);
+		
+	    	e1.analyze(exprNode, programTable);
 	}
 
 }
@@ -1375,9 +1374,9 @@ class int_const extends Expression {
 	dump_type(out, n);
     }
 
-	public void analyze (ClassTable classTable, class_c currClass, ProgramTable programTable) {
+	public void analyze (ExpressionNode exprNode, ProgramTable programTable) {
 		/* Respective semantic analysis */
-		this.programTable = programTable;
+		
 	}
 
 }
@@ -1413,9 +1412,9 @@ class bool_const extends Expression {
 	dump_type(out, n);
     }
 
-	public void analyze (ClassTable classTable, class_c currClass, ProgramTable programTable) {
+	public void analyze (ExpressionNode exprNode, ProgramTable programTable) {
 		/* Respective semantic analysis */
-		this.programTable = programTable;
+		
 	}
 
 }
@@ -1453,9 +1452,9 @@ class string_const extends Expression {
 	dump_type(out, n);
     }
 
-	public void analyze (ClassTable classTable, class_c currClass, ProgramTable programTable) {
+	public void analyze (ExpressionNode exprNode, ProgramTable programTable) {
 		/* Respective semantic analysis */
-		this.programTable = programTable;
+		
 	}
 }
 
@@ -1490,9 +1489,9 @@ class new_ extends Expression {
 	dump_type(out, n);
     }
 
-	public void analyze (ClassTable classTable, class_c currClass, ProgramTable programTable) {
+	public void analyze (ExpressionNode exprNode, ProgramTable programTable) {
 		/* Respective semantic analysis */
-		this.programTable = programTable;
+		
 	}
 
 }
@@ -1528,9 +1527,9 @@ class isvoid extends Expression {
 	dump_type(out, n);
     }
 
-	public void analyze (ClassTable classTable, class_c currClass, ProgramTable programTable) {
+	public void analyze (ExpressionNode exprNode, ProgramTable programTable) {
 		/* Respective semantic analysis */
-		this.programTable = programTable;
+		
 	}
 }
 
@@ -1560,9 +1559,9 @@ class no_expr extends Expression {
 	dump_type(out, n);
     }
 
-	public void analyze (ClassTable classTable, class_c currClass, ProgramTable programTable) {
+	public void analyze (ExpressionNode exprNode, ProgramTable programTable) {
 		/* Respective semantic analysis */
-		this.programTable = programTable;
+		
 	}
 
 }
@@ -1598,11 +1597,10 @@ class object extends Expression {
 	dump_type(out, n);
     }
 
-	public void analyze (ClassTable classTable, class_c currClass, ProgramTable programTable) {
+	public void analyze (ExpressionNode exprNode, ProgramTable programTable) {
 		/* Respective semantic analysis */
-		this.programTable = programTable;
+		
 	}
 
 }
-
 
