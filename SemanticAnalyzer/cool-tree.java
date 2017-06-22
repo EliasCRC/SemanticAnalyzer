@@ -279,7 +279,7 @@ class programc extends Program {
 		for (Enumeration e = classes.getElements(); e.hasMoreElements(); ) {
 	   		((Class_)e.nextElement()).fillTable(programTable);
         	}
-		programTable.print();
+		programTable.traverse();
 
 		if (classTable.errors()) {
 	    	System.err.println("Compilation halted due to static semantic errors.");

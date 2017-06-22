@@ -43,6 +43,15 @@ class ProgramTable {
 			currClass.fillFeatures();
 		}
 	}
+
+
+	public void traverse() {
+		for (AbstractSymbol classKey : classMap.keySet()) {
+			ClassNode currClass = classMap.get(classKey);
+			currClass.traverse(this);
+		}
+	}
+
 }
 
 class ClassNode {
@@ -75,6 +84,18 @@ class ClassNode {
 		}
 	}
 
+
+	public void traverse(ProgramTable progTable) {
+		for (AbstractSymbol methodKey : methodMap.keySet()) {
+			MethodNode currMethod = methodMap.get(methodKey);
+			currMethod.traverse(progTable);
+		}
+		for (AbstractSymbol attrKey : attributeMap.keySet()) {
+			AttributeNode currAttr = attributeMap.get(attrKey);
+			currAttr.traverse(progTable);
+		}
+	}
+
 }
 
 class AttributeNode {
@@ -92,6 +113,12 @@ class AttributeNode {
 	public void fillParents(AbstractSymbol className) {
 		this.fatherClass = className;
 		init.fillParents(className, name, true);
+
+	}
+
+	public void traverse(ProgramTable progTable) {
+		init.traverse(progTable);
+
 	}
 }
 
@@ -114,6 +141,12 @@ class MethodNode {
 		this.fatherClass = className;
 		expr.fillParents(className, name, false);
 	}
+
+	
+	public void traverse(ProgramTable progTable) {
+		expr.traverse(progTable);
+	}
+
 }
 
 class FormalNode {
@@ -141,4 +174,10 @@ class ExpressionNode {
 		this.methodName = methodName;
 		this.isInit = isInit;
 	}
+
+
+	public void traverse(ProgramTable progTable) {
+		expr.analyze(this, progTable);
+	}
+
 }
