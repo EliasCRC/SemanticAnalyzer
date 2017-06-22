@@ -11,6 +11,7 @@ class ClassTable {
     private PrintStream errorStream;
     private HashMap<AbstractSymbol,class_c> classHashMap;
     private HashSet<AbstractSymbol> classSet;
+    private HashSet<String> nameSet;
     /** Creates data structures representing basic Cool classes (Object,
      * IO, Int, Bool, String).  Please note: as is this method does not
      * do anything useful; you will need to edit it to make if do what
@@ -180,14 +181,24 @@ class ClassTable {
 	errorStream = System.err;
 	classHashMap = 	new HashMap<AbstractSymbol,class_c>();
 	classSet = new HashSet<AbstractSymbol>();
+	nameSet = new HashSet<String>();
 	int counter = 0;
 	for (Enumeration e = cls.getElements(); e.hasMoreElements(); ) {
 	    class_c currC = (class_c)e.nextElement();
+	    if(!nameSet.contains(currC.getName().getString())){
+			nameSet.add(currC.getName().getString());
+		}
+		else {
+			semantError(currC);
+			errorStream.print("Redefine Class Error\n");
+		}
 	    classHashMap.put(currC.getName(),currC);
 	    counter++;
         }
+	/*Verificacion de herencia aciclica*/
         class_c currClass;
         for (AbstractSymbol key : classHashMap.keySet()) {
+         System.out.println(key);
     		boolean finished = false;
   		classSet.clear();
   		classSet.add(key);
@@ -207,6 +218,7 @@ class ClassTable {
   			}
   		}
 	}
+
 	/* fill this in */
     }
     
