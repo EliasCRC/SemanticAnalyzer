@@ -1603,3 +1603,4 @@ class object extends Expression {
 	}
 
 }
+
