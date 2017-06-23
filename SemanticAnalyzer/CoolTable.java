@@ -110,7 +110,7 @@ class ClassNode {
 		for (AbstractSymbol attrKey : attributeMap.keySet()) {
 			AttributeNode currAttr = attributeMap.get(attrKey);
 			currAttr.fillParents(className);
-			symbolTable.addId(attrKey, currAttr);
+			symbolTable.addId(attrKey, currAttr.type);
 		}
 	}
 
