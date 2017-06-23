@@ -78,7 +78,9 @@ class ClassNode {
 	public AbstractSymbol fileName;		//Nombre de archivo
 	public AbstractSymbol className;	//Nombre de ella misma 
 	public class_c errorClass;		//Nodo del arbol para erores
+
 	
+	public SymbolTable symbolTable;  //scope de la clase
 	public HashMap<AbstractSymbol, AttributeNode> attributeMap;	//Mapa para relacionar Nombre -> Atributo
 	public HashMap<AbstractSymbol, MethodNode> methodMap;		//Mapa para relacionar Nombre -> Método
 	
@@ -91,6 +93,8 @@ class ClassNode {
 		this.errorClass = errorClass;
 		this.className = className;
 
+		symbolTable = new SymbolTable();  // se inicializa el scope de la clase
+		symbolTable.enterScope();
 		attributeMap = new HashMap<AbstractSymbol, AttributeNode>();
 		methodMap = new HashMap<AbstractSymbol, MethodNode>();
 	}
@@ -106,6 +110,7 @@ class ClassNode {
 		for (AbstractSymbol attrKey : attributeMap.keySet()) {
 			AttributeNode currAttr = attributeMap.get(attrKey);
 			currAttr.fillParents(className);
+			symbolTable.addId(attrKey, currAttr);
 		}
 	}
 
@@ -217,8 +222,9 @@ class MethodNode {
 			errorReport.semantError(fileErrorName, errorMethod);
 			System.out.println("El error");
 		*/
-
+		progTable.classMap.get(fatherClass).symbolTable.enterScope();  // entra a un nuevo scope (el del metodo)
 		expr.traverse(progTable);
+		progTable.classMap.get(fatherClass).symbolTable.exitScope();  // sale de ese scope (el del metodo)
 	}
 }
 
@@ -266,5 +272,3 @@ class ExpressionNode {
 		expr.analyze(this, progTable);
 	}
 }
-
-
