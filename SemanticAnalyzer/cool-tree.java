@@ -984,9 +984,15 @@ class let extends Expression {
 		
 	    	ClassNode currC = programTable.classMap.get(exprNode.className);
 		if (!exprNode.isInit) {
+			currC.symbolTable.enterScope();
 			init.analyze(exprNode, programTable);
+			if ( !(init.get_type()).equals(type_decl) ) {
+				programTable.classTable.semantError(currC.fileName, this);
+				System.out.println("Assignment of different types in let expression");
+				type_decl = TreeConstants.Object_;
+			} 
 			MethodNode currMethod = currC.methodMap.get(exprNode.methodName);
-			currC.symbolTable.addId(type_decl, init);
+			currC.symbolTable.addId(identifier, type_decl);
 			body.analyze(exprNode, programTable);
 			this.set_type(body.get_type());
 			currC.symbolTable.exitScope();
