@@ -1,5 +1,11 @@
 import java.util.HashMap;
 
+/*
+* Archivos Útiles:
+* See SymbolTable.java
+* See TreeConstants.java
+*/
+
 class ProgramTable {
 
 	public HashMap<AbstractSymbol, ClassNode> classMap; //Mapa que relaciona Nombre -> Clase
