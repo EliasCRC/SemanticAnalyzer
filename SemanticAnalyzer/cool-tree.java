@@ -1370,7 +1370,9 @@ class eq extends Expression {
 		
 	    	e1.analyze(exprNode, programTable);
 		e2.analyze(exprNode, programTable);
-		if ( (((this.e1.get_type()).equals(TreeConstants.Bool)&&(this.e2.get_type()).equals(TreeConstants.Bool)) || ((this.e1.get_type()).equals(TreeConstants.Int) && (this.e2.get_type()).equals(TreeConstants.Int)) || ((this.e1.get_type()).equals(TreeConstants.Str)&& (this.e2.get_type()).equals(TreeConstants.Str)))&& (this.e1.get_type()!= null && this.e1.get_type()!= null )) {
+		if ((((this.e1.get_type()).equals(TreeConstants.Bool)&&(this.e2.get_type()).equals(TreeConstants.Bool)) 
+		      || ((this.e1.get_type()).equals(TreeConstants.Int) && (this.e2.get_type()).equals(TreeConstants.Int)) 
+		      || ((this.e1.get_type()).equals(TreeConstants.Str)&& (this.e2.get_type()).equals(TreeConstants.Str)))) {
 			this.set_type(TreeConstants.Bool);
 		} else {
 			reportError(programTable, exprNode, "Subexpressions of equal does not match with same type");
@@ -1420,8 +1422,8 @@ class leq extends Expression {
 		
 	    	e1.analyze(exprNode, programTable);
 		e2.analyze(exprNode, programTable);
-		if ( (this.e1.get_type()).equals(TreeConstants.Int) && (this.e2.get_type()).equals(TreeConstants.Bool) ) {
-			this.set_type(TreeConstants.Int);
+		if ( (this.e1.get_type()).equals(TreeConstants.Int) && (this.e2.get_type()).equals(TreeConstants.Int) ) {
+			this.set_type(TreeConstants.Bool);
 		} else {
 			reportError(programTable, exprNode, "Subexpressions of leq does not match type Int");
 			this.set_type(TreeConstants.Object_);	//Si no son bools, se pone tipo Object para identificar el error
