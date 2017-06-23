@@ -947,9 +947,18 @@ class let extends Expression {
 
 	public void analyze (ExpressionNode exprNode, ProgramTable programTable) {
 		/* Respective semantic analysis */
-		
-	    	init.analyze(exprNode, programTable);
-		body.analyze(exprNode, programTable);
+		ClassNode currC = programTable.classMap.get(exprNode.className);
+		if (!exprNode.isInit) {
+			init.analyze(exprNode, programTable);
+			MethodNode currMethod = currC.methodMap.get(exprNode.methodName);
+			currMethod.scope.put(type_decl, init);
+			body.analyze(exprNode, programTable);
+			currMethod.scope.clear();
+		} else {
+			programTable.classTable.semantError(currC.fileName, this);
+			System.out.println("Assignation of let expression in attribute declaration");
+		}
+	    	
 	}
 
 }
