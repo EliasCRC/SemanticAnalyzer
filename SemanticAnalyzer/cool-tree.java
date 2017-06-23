@@ -18,7 +18,12 @@ abstract class Program extends TreeNode {
     }
     public abstract void dump_with_types(PrintStream out, int n);
     public abstract void semant();
+//---------------------------------------------------------------------------------------------------
+//Esto fue añadido
+
 	ProgramTable programTable;
+
+//---------------------------------------------------------------------------------------------------
 
 }
 
@@ -28,15 +33,20 @@ abstract class Class_ extends TreeNode {
     protected Class_(int lineNumber) {
         super(lineNumber);
     }
+//---------------------------------------------------------------------------------------------------
+//Esto fue añadido
+
 	public abstract void fillTable(ProgramTable programTable);
+
+//---------------------------------------------------------------------------------------------------
+
     public abstract void dump_with_types(PrintStream out, int n);
 
 }
 
 
 /** Defines list phylum Classes
-    <p>
-    See <a href="ListNode.html">ListNode</a> for full documentation. */
+    See ListNode for full documentation. */
 class Classes extends ListNode {
     public final static Class elementClass = Class_.class;
     /** Returns class of this lists's elements */
@@ -66,15 +76,20 @@ abstract class Feature extends TreeNode {
     protected Feature(int lineNumber) {
         super(lineNumber);
     }
+//---------------------------------------------------------------------------------------------------
+//Esto fue añadido
+
 	public abstract void fillTable(class_c currClass, ProgramTable programTable);
+
+//---------------------------------------------------------------------------------------------------
+
     public abstract void dump_with_types(PrintStream out, int n);
 
 }
 
 
 /** Defines list phylum Features
-    <p>
-    See <a href="ListNode.html">ListNode</a> for full documentation. */
+    See ListNode for full documentation. */
 class Features extends ListNode {
     public final static Class elementClass = Feature.class;
     /** Returns class of this lists's elements */
@@ -104,15 +119,19 @@ abstract class Formal extends TreeNode {
     protected Formal(int lineNumber) {
         super(lineNumber);
     }
+//---------------------------------------------------------------------------------------------------
+//Esto fue añadido
+
 	public abstract void fillTable(class_c currClass, AbstractSymbol currMethod, ProgramTable programTable);
+
+//---------------------------------------------------------------------------------------------------
     public abstract void dump_with_types(PrintStream out, int n);
 
 }
 
 
 /** Defines list phylum Formals
-    <p>
-    See <a href="ListNode.html">ListNode</a> for full documentation. */
+    See ListNode for full documentation. */
 class Formals extends ListNode {
     public final static Class elementClass = Formal.class;
     /** Returns class of this lists's elements */
@@ -146,7 +165,20 @@ abstract class Expression extends TreeNode {
     public AbstractSymbol get_type() { return type; }           
     public Expression set_type(AbstractSymbol s) { type = s; return this; } 
     public abstract void dump_with_types(PrintStream out, int n);
+//---------------------------------------------------------------------------------------------------
+//Esto fue añadido
+
 	public abstract void analyze(ExpressionNode exprNode, ProgramTable programTable);
+
+	/* Metodo para reportar errores */
+	public void reportError(ProgramTable programTable, ExpressionNode expr, String msg) {
+		ClassTable errorReport = programTable.classTable;		//Agarra la classTable
+		AbstractSymbol fileErrorName = ( programTable.classMap.get(expr.className) ).fileName; //Agarra el filename
+		errorReport.semantError(fileErrorName, this);
+		System.out.println(msg);
+	}
+
+//---------------------------------------------------------------------------------------------------
     public void dump_type(PrintStream out, int n) {
         if (type != null)
             { out.println(Utilities.pad(n) + ": " + type.getString()); }
@@ -158,8 +190,7 @@ abstract class Expression extends TreeNode {
 
 
 /** Defines list phylum Expressions
-    <p>
-    See <a href="ListNode.html">ListNode</a> for full documentation. */
+    See ListNode for full documentation. */
 class Expressions extends ListNode {
     public final static Class elementClass = Expression.class;
     /** Returns class of this lists's elements */
@@ -189,16 +220,28 @@ abstract class Case extends TreeNode {
     protected Case(int lineNumber) {
         super(lineNumber);
     }
-	ProgramTable programTable;
+
+//---------------------------------------------------------------------------------------------------
+//Esto fue añadido
+
 	public abstract void analyze(ExpressionNode exprNode, ProgramTable programTable);
+
+	/* Metodo para reportar errores */
+	public void reportError(ProgramTable programTable, ExpressionNode expr, String msg) {
+		ClassTable errorReport = programTable.classTable;		//Agarra la classTable
+		AbstractSymbol fileErrorName = ( programTable.classMap.get(expr.className) ).fileName; //Agarra el filename
+		errorReport.semantError(fileErrorName, this);
+		System.out.println(msg);
+	}
+
+//---------------------------------------------------------------------------------------------------
     public abstract void dump_with_types(PrintStream out, int n);
 
 }
 
 
 /** Defines list phylum Cases
-    <p>
-    See <a href="ListNode.html">ListNode</a> for full documentation. */
+    See ListNode for full documentation. */
 class Cases extends ListNode {
     public final static Class elementClass = Case.class;
     /** Returns class of this lists's elements */
@@ -224,8 +267,7 @@ class Cases extends ListNode {
 
 
 /** Defines AST constructor 'programc'.
-    <p>
-    See <a href="TreeNode.html">TreeNode</a> for full documentation. */
+    See TreeNode for full documentation. */
 class programc extends Program {
     protected Classes classes;
     /** Creates "programc" AST node. 
@@ -256,15 +298,11 @@ class programc extends Program {
     }
     /** This method is the entry point to the semantic checker.  You will
         need to complete it in programming assignment 4.
-	<p>
         Your checker should do the following two things:
-	<ol>
-	<li>Check that the program is semantically correct
-	<li>Decorate the abstract syntax tree with type information
+	Check that the program is semantically correct
+	Decorate the abstract syntax tree with type information
         by setting the type field in each Expression node.
         (see tree.h)
-	</ol>
-	<p>
 	You are free to first do (1) and make sure you catch all semantic
     	errors. Part (2) can be done in a second stage when you want
 	to test the complete compiler.
@@ -291,8 +329,7 @@ class programc extends Program {
 
 
 /** Defines AST constructor 'class_c'.
-    <p>
-    See <a href="TreeNode.html">TreeNode</a> for full documentation. */
+    See TreeNode for full documentation. */
 class class_c extends Class_ {
     protected AbstractSymbol name;
     protected AbstractSymbol parent;
@@ -344,7 +381,6 @@ class class_c extends Class_ {
     }
 
 	public void fillTable (ProgramTable programTable) {
-		/* Respective semantic analysis */
 		programTable.classMap.put(name, new ClassNode(filename, name, parent, this));
 		for (Enumeration e = features.getElements(); e.hasMoreElements();) {
 	    		((Feature)e.nextElement()).fillTable(this, programTable);
@@ -357,8 +393,7 @@ class class_c extends Class_ {
 
 
 /** Defines AST constructor 'method'.
-    <p>
-    See <a href="TreeNode.html">TreeNode</a> for full documentation. */
+    See TreeNode for full documentation. */
 class method extends Feature {
     protected AbstractSymbol name;
     protected Formals formals;
@@ -405,7 +440,7 @@ class method extends Feature {
 	public void fillTable (class_c currClass, ProgramTable programTable) {
 		
 		ClassNode classNode = programTable.classMap.get(currClass.getName());
-		classNode.methodMap.put(name, new MethodNode(return_type, name, expr));
+		classNode.methodMap.put(name, new MethodNode(return_type, name, this, expr));
 
 		for (Enumeration e = formals.getElements(); e.hasMoreElements();) {
 	    		((Formal)e.nextElement()).fillTable(currClass, name, programTable);
@@ -416,8 +451,7 @@ class method extends Feature {
 
 
 /** Defines AST constructor 'attr'.
-    <p>
-    See <a href="TreeNode.html">TreeNode</a> for full documentation. */
+    See TreeNode for full documentation. */
 class attr extends Feature {
     protected AbstractSymbol name;
     protected AbstractSymbol type_decl;
@@ -456,7 +490,7 @@ class attr extends Feature {
 
 	public void fillTable (class_c currClass, ProgramTable programTable) {
 		ClassNode classNode = programTable.classMap.get(currClass.getName());
-		classNode.attributeMap.put(name, new AttributeNode(type_decl, name, init));
+		classNode.attributeMap.put(name, new AttributeNode(type_decl, name, this, init));
 		
 	}
 
@@ -498,7 +532,6 @@ class formalc extends Formal {
     }
 
 	public void fillTable (class_c currClass, AbstractSymbol currMethod, ProgramTable programTable) {
-		/* Respective semantic analysis */
 		ClassNode classNode = programTable.classMap.get(currClass.getName());
 		MethodNode methodNode = classNode.methodMap.get(currMethod);
 		methodNode.formalMap.put(name, new FormalNode(type_decl));
@@ -547,7 +580,7 @@ class branch extends Case {
     }
 
 	public void analyze (ExpressionNode exprNode, ProgramTable programTable) {
-		/* Respective semantic analysis */
+		/* Un error se reporta llamando a: reportError(programTable, exprNode, "El mensaje"); */
 	}
 
 }
@@ -589,7 +622,7 @@ class assign extends Expression {
     }
 
 	public void analyze (ExpressionNode exprNode, ProgramTable programTable) {
-		/* Respective semantic analysis */
+		/* Un error se reporta llamando a: reportError(programTable, exprNode, "El mensaje"); */
 		expr.analyze(exprNode, programTable);
 	}
 
@@ -701,7 +734,7 @@ class dispatch extends Expression {
     }
 
 	public void analyze (ExpressionNode exprNode, ProgramTable programTable) {
-		/* Respective semantic analysis */
+		/* Un error se reporta llamando a: reportError(programTable, exprNode, "El mensaje"); */
 		
 		expr.analyze(exprNode, programTable);;
 		for (Enumeration e = actual.getElements(); e.hasMoreElements();) {
@@ -753,7 +786,7 @@ class cond extends Expression {
     }
 	
 	public void analyze (ExpressionNode exprNode, ProgramTable programTable) {
-		/* Respective semantic analysis */
+		/* Un error se reporta llamando a: reportError(programTable, exprNode, "El mensaje"); */
 		
 		pred.analyze(exprNode, programTable);
 		then_exp.analyze(exprNode, programTable);
@@ -799,7 +832,7 @@ class loop extends Expression {
     }
 
 	public void analyze (ExpressionNode exprNode, ProgramTable programTable) {
-		/* Respective semantic analysis */
+		/* Un error se reporta llamando a: reportError(programTable, exprNode, "El mensaje"); */
 		
 		pred.analyze(exprNode, programTable);
 		body.analyze(exprNode, programTable);
@@ -846,7 +879,7 @@ class typcase extends Expression {
     }
 
 	public void analyze (ExpressionNode exprNode, ProgramTable programTable) {
-		/* Respective semantic analysis */
+		/* Un error se reporta llamando a: reportError(programTable, exprNode, "El mensaje"); */
 		
 		expr.analyze(exprNode, programTable);
 		for (Enumeration e = cases.getElements(); e.hasMoreElements();) {
@@ -855,6 +888,16 @@ class typcase extends Expression {
 	}
 
 }
+
+
+
+	//-----------------------------------------------------------------------------------------
+	//
+	// Inicia nodo de Bloque
+	//
+	//-----------------------------------------------------------------------------------------
+
+
 
 
 /** Defines AST constructor 'block'.
@@ -890,19 +933,35 @@ class block extends Expression {
     }
 
 	public void analyze (ExpressionNode exprNode, ProgramTable programTable) {
-		/* Respective semantic analysis */
+		/* Un error se reporta llamando a: reportError(programTable, exprNode, "El mensaje"); */
 		
+		Expression currExpr = null;
 		for (Enumeration e = body.getElements(); e.hasMoreElements();) {
-	    	((Expression)e.nextElement()).analyze(exprNode, programTable);
-        }
+	    		currExpr = ((Expression)e.nextElement());
+	    		currExpr.analyze(exprNode, programTable);
+        	}
+        	
+        	this.set_type(currExpr.get_type());
+        	
 	}
 
 }
 
 
+
+	//-----------------------------------------------------------------------------------------
+	//
+	// Termina nodo de Bloque
+	//
+	//-----------------------------------------------------------------------------------------
+
+
+
+
+
+
 /** Defines AST constructor 'let'.
-    <p>
-    See <a href="TreeNode.html">TreeNode</a> for full documentation. */
+    See TreeNode for full documentation. */
 class let extends Expression {
     protected AbstractSymbol identifier;
     protected AbstractSymbol type_decl;
@@ -946,27 +1005,42 @@ class let extends Expression {
     }
 
 	public void analyze (ExpressionNode exprNode, ProgramTable programTable) {
-		/* Respective semantic analysis */
-		ClassNode currC = programTable.classMap.get(exprNode.className);
+		/* Un error se reporta llamando a: reportError(programTable, exprNode, "El mensaje"); */
+		
+	    	ClassNode currC = programTable.classMap.get(exprNode.className);
 		if (!exprNode.isInit) {
+			currC.symbolTable.enterScope();
 			init.analyze(exprNode, programTable);
+			if ( !(init.get_type()).equals(TreeConstants.No_type) && !(init.get_type()).equals(type_decl) ) {
+				programTable.classTable.semantError(currC.fileName, this);
+				System.out.println("Assignment of different types in let expression");
+				type_decl = TreeConstants.Object_;
+			} 
 			MethodNode currMethod = currC.methodMap.get(exprNode.methodName);
-			currMethod.scope.put(type_decl, init);
+			currC.symbolTable.addId(identifier, type_decl);
 			body.analyze(exprNode, programTable);
-			currMethod.scope.clear();
+			this.set_type(body.get_type());
+			currC.symbolTable.exitScope();
 		} else {
 			programTable.classTable.semantError(currC.fileName, this);
 			System.out.println("Assignation of let expression in attribute declaration");
+			this.set_type(TreeConstants.Object_);
 		}
-	    	
+
 	}
 
 }
 
+	//-----------------------------------------------------------------------------------------
+	//
+	// Inicia expresiones aritméticas
+	//
+	//-----------------------------------------------------------------------------------------
+
+
 
 /** Defines AST constructor 'plus'.
-    <p>
-    See <a href="TreeNode.html">TreeNode</a> for full documentation. */
+    See TreeNode for full documentation. */
 class plus extends Expression {
     protected Expression e1;
     protected Expression e2;
@@ -1000,18 +1074,24 @@ class plus extends Expression {
     }
 
 	public void analyze (ExpressionNode exprNode, ProgramTable programTable) {
-		/* Respective semantic analysis */
-		
-	    e1.analyze(exprNode, programTable);
-		e2.analyze(exprNode, programTable);
+		/* Un error se reporta llamando a: reportError(programTable, exprNode, "El mensaje"); */
+		/* Manda a las subexpresiones de la suma a verificarse */
+	    	this.e1.analyze(exprNode, programTable);
+		this.e2.analyze(exprNode, programTable);
+		/* Revisa que ambas subexpresiones sean del tipo entero */
+		if ( (this.e1.get_type()).equals(TreeConstants.Int) && (this.e2.get_type()).equals(TreeConstants.Int) ) {
+			this.set_type(TreeConstants.Int);
+		} else {
+			reportError(programTable, exprNode, "Subexpressions of sumation does not match type Int");
+			this.set_type(TreeConstants.Object_);	//Si no son ints, se pone tipo Object para identificar el error
+		}
 	}
 
 }
 
 
 /** Defines AST constructor 'sub'.
-    <p>
-    See <a href="TreeNode.html">TreeNode</a> for full documentation. */
+    See TreeNode for full documentation. */
 class sub extends Expression {
     protected Expression e1;
     protected Expression e2;
@@ -1039,23 +1119,29 @@ class sub extends Expression {
     public void dump_with_types(PrintStream out, int n) {
         dump_line(out, n);
         out.println(Utilities.pad(n) + "_sub");
-	e1.dump_with_types(out, n + 2);
-	e2.dump_with_types(out, n + 2);
-	dump_type(out, n);
+		e1.dump_with_types(out, n + 2);
+		e2.dump_with_types(out, n + 2);
+		dump_type(out, n);
     }
 
 	public void analyze (ExpressionNode exprNode, ProgramTable programTable) {
-		/* Respective semantic analysis */
-		
-	    e1.analyze(exprNode, programTable);
-		e2.analyze(exprNode, programTable);
+		/* Un error se reporta llamando a: reportError(programTable, exprNode, "El mensaje"); */
+		/* Manda a las subexpresiones de la resta a verificarse */
+	    this.e1.analyze(exprNode, programTable);
+		this.e2.analyze(exprNode, programTable);
+		/* Revisa que ambas subexpresiones sean del tipo entero */
+		if ( (this.e1.get_type()).equals(TreeConstants.Int) && (this.e2.get_type()).equals(TreeConstants.Int) ) {
+			this.set_type(TreeConstants.Int);
+		} else {
+			reportError(programTable, exprNode, "Subexpressions of substraction does not match type Int");
+			this.set_type(TreeConstants.Object_);	//Si no son ints, se pone tipo Object para identificar el error
+		}
 	}
 }
 
 
 /** Defines AST constructor 'mul'.
-    <p>
-    See <a href="TreeNode.html">TreeNode</a> for full documentation. */
+    See TreeNode for full documentation. */
 class mul extends Expression {
     protected Expression e1;
     protected Expression e2;
@@ -1089,18 +1175,24 @@ class mul extends Expression {
     }
 
 	public void analyze (ExpressionNode exprNode, ProgramTable programTable) {
-		/* Respective semantic analysis */
-		
-		e1.analyze(exprNode, programTable);
-		e2.analyze(exprNode, programTable);
+		/* Un error se reporta llamando a: reportError(programTable, exprNode, "El mensaje"); */
+		/* Manda a las subexpresiones de la multiplicacion a verificarse */
+	    this.e1.analyze(exprNode, programTable);
+		this.e2.analyze(exprNode, programTable);
+		/* Revisa que ambas subexpresiones sean del tipo entero */
+		if ( (this.e1.get_type()).equals(TreeConstants.Int) && (this.e2.get_type()).equals(TreeConstants.Int) ) {
+			this.set_type(TreeConstants.Int);
+		} else {
+			reportError(programTable, exprNode, "Subexpressions of multiply does not match type Int");
+			this.set_type(TreeConstants.Object_);	//Si no son ints, se pone tipo Object para identificar el error
+		}
 	}
 
 }
 
 
 /** Defines AST constructor 'divide'.
-    <p>
-    See <a href="TreeNode.html">TreeNode</a> for full documentation. */
+    See TreeNode for full documentation. */
 class divide extends Expression {
     protected Expression e1;
     protected Expression e2;
@@ -1134,18 +1226,24 @@ class divide extends Expression {
     }
 
 	public void analyze (ExpressionNode exprNode, ProgramTable programTable) {
-		/* Respective semantic analysis */
-		
-	    	e1.analyze(exprNode, programTable);
-		e2.analyze(exprNode, programTable);
+		/* Un error se reporta llamando a: reportError(programTable, exprNode, "El mensaje"); */
+		/* Manda a las subexpresiones de la división a verificarse */
+	    this.e1.analyze(exprNode, programTable);
+		this.e2.analyze(exprNode, programTable);
+		/* Revisa que ambas subexpresiones sean del tipo entero */
+		if ( (this.e1.get_type()).equals(TreeConstants.Int) && (this.e2.get_type()).equals(TreeConstants.Int) ) {
+			this.set_type(TreeConstants.Int);
+		} else {
+			reportError(programTable, exprNode, "Subexpressions of divide does not match type Int");
+			this.set_type(TreeConstants.Object_);	//Si no son ints, se pone tipo Object para identificar el error
+		}
 	}
 
 }
 
 
 /** Defines AST constructor 'neg'.
-    <p>
-    See <a href="TreeNode.html">TreeNode</a> for full documentation. */
+    See TreeNode for full documentation. */
 class neg extends Expression {
     protected Expression e1;
     /** Creates "neg" AST node. 
@@ -1174,17 +1272,39 @@ class neg extends Expression {
     }
 
 	public void analyze (ExpressionNode exprNode, ProgramTable programTable) {
-		/* Respective semantic analysis */
-		
-	    	e1.analyze(exprNode, programTable);
+		/* Un error se reporta llamando a: reportError(programTable, exprNode, "El mensaje"); */
+		/* Manda a la subexpresion de la negacion a verificarse */
+	    this.e1.analyze(exprNode, programTable);
+		/* Revisa que ambas subexpresiones sean del tipo entero */
+		if ( (this.e1.get_type()).equals(TreeConstants.Int) ) {
+			this.set_type(TreeConstants.Int);
+		} else {
+			reportError(programTable, exprNode, "Subexpressions of negation does not match type Int");
+			this.set_type(TreeConstants.Object_);	//Si no son ints, se pone tipo Object para identificar el error
+		}
 	}
 
 }
 
 
+	//-----------------------------------------------------------------------------------------
+	//
+	// Termina expresiones aritméticas
+	//
+	//-----------------------------------------------------------------------------------------
+
+
+
+	//-----------------------------------------------------------------------------------------
+	//
+	// Inicia expresiones booleanas
+	//
+	//-----------------------------------------------------------------------------------------
+
+
+
 /** Defines AST constructor 'lt'.
-    <p>
-    See <a href="TreeNode.html">TreeNode</a> for full documentation. */
+    See TreeNode for full documentation. */
 class lt extends Expression {
     protected Expression e1;
     protected Expression e2;
@@ -1218,10 +1338,17 @@ class lt extends Expression {
     }
 
 	public void analyze (ExpressionNode exprNode, ProgramTable programTable) {
-		/* Respective semantic analysis */
+		/* Un error se reporta llamando a: reportError(programTable, exprNode, "El mensaje"); */
 		
 	    	e1.analyze(exprNode, programTable);
 		e2.analyze(exprNode, programTable);
+		
+		if ( (this.e1.get_type()).equals(TreeConstants.Int) && (this.e2.get_type()).equals(TreeConstants.Int) ) {
+			this.set_type(TreeConstants.Bool);
+		} else {
+			reportError(programTable, exprNode, "Subexpresions of It does not match with type Int");
+			this.set_type(TreeConstants.Object_);	//Si no son bools, se pone tipo Object para identificar el error
+		}
 	}
 }
 
@@ -1262,10 +1389,18 @@ class eq extends Expression {
     }
 
 	public void analyze (ExpressionNode exprNode, ProgramTable programTable) {
-		/* Respective semantic analysis */
+		/* Un error se reporta llamando a: reportError(programTable, exprNode, "El mensaje"); */
 		
 	    	e1.analyze(exprNode, programTable);
 		e2.analyze(exprNode, programTable);
+		if ((((this.e1.get_type()).equals(TreeConstants.Bool)&&(this.e2.get_type()).equals(TreeConstants.Bool)) 
+		      || ((this.e1.get_type()).equals(TreeConstants.Int) && (this.e2.get_type()).equals(TreeConstants.Int)) 
+		      || ((this.e1.get_type()).equals(TreeConstants.Str)&& (this.e2.get_type()).equals(TreeConstants.Str)))) {
+			this.set_type(TreeConstants.Bool);
+		} else {
+			reportError(programTable, exprNode, "Subexpressions of equal does not match with same type");
+			this.set_type(TreeConstants.Object_);	//Si no son bools, se pone tipo Object para identificar el error
+		}
 	}
 }
 
@@ -1306,10 +1441,16 @@ class leq extends Expression {
     }
 
 	public void analyze (ExpressionNode exprNode, ProgramTable programTable) {
-		/* Respective semantic analysis */
+		/* Un error se reporta llamando a: reportError(programTable, exprNode, "El mensaje"); */
 		
 	    	e1.analyze(exprNode, programTable);
 		e2.analyze(exprNode, programTable);
+		if ( (this.e1.get_type()).equals(TreeConstants.Int) && (this.e2.get_type()).equals(TreeConstants.Int) ) {
+			this.set_type(TreeConstants.Bool);
+		} else {
+			reportError(programTable, exprNode, "Subexpressions of leq does not match type Int");
+			this.set_type(TreeConstants.Object_);	//Si no son bools, se pone tipo Object para identificar el error
+		}
 	}
 }
 
@@ -1345,17 +1486,41 @@ class comp extends Expression {
     }
 
 	public void analyze (ExpressionNode exprNode, ProgramTable programTable) {
-		/* Respective semantic analysis */
+		/* Un error se reporta llamando a: reportError(programTable, exprNode, "El mensaje"); */
 		
 	    	e1.analyze(exprNode, programTable);
+	    	if ( (this.e1.get_type()).equals(TreeConstants.Bool) ) {
+			this.set_type(TreeConstants.Bool);
+		} else {
+			reportError(programTable, exprNode, "Subexpression of compare does not match type Bool");
+			this.set_type(TreeConstants.Object_);	//Si no son ints, se pone tipo Object para identificar el error
+		}
 	}
 
 }
 
 
+	//-----------------------------------------------------------------------------------------
+	//
+	// Termina expresiones booleanas
+	//
+	//-----------------------------------------------------------------------------------------
+
+
+
+
+	//-----------------------------------------------------------------------------------------
+	//
+	// Inicia constantes e ids
+	//
+	//-----------------------------------------------------------------------------------------
+
+
+
+
+
 /** Defines AST constructor 'int_const'.
-    <p>
-    See <a href="TreeNode.html">TreeNode</a> for full documentation. */
+    See TreeNode for full documentation. */
 class int_const extends Expression {
     protected AbstractSymbol token;
     /** Creates "int_const" AST node. 
@@ -1384,8 +1549,8 @@ class int_const extends Expression {
     }
 
 	public void analyze (ExpressionNode exprNode, ProgramTable programTable) {
-		/* Respective semantic analysis */
-		
+		/* Un error se reporta llamando a: reportError(programTable, exprNode, "El mensaje"); */
+		this.set_type(TreeConstants.Int);
 	}
 
 }
@@ -1422,8 +1587,8 @@ class bool_const extends Expression {
     }
 
 	public void analyze (ExpressionNode exprNode, ProgramTable programTable) {
-		/* Respective semantic analysis */
-		
+		/* Un error se reporta llamando a: reportError(programTable, exprNode, "El mensaje"); */
+		this.set_type(TreeConstants.Bool);
 	}
 
 }
@@ -1462,7 +1627,7 @@ class string_const extends Expression {
     }
 
 	public void analyze (ExpressionNode exprNode, ProgramTable programTable) {
-		/* Respective semantic analysis */
+		/* Un error se reporta llamando a: reportError(programTable, exprNode, "El mensaje"); */
 		
 	}
 }
@@ -1499,7 +1664,7 @@ class new_ extends Expression {
     }
 
 	public void analyze (ExpressionNode exprNode, ProgramTable programTable) {
-		/* Respective semantic analysis */
+		/* Un error se reporta llamando a: reportError(programTable, exprNode, "El mensaje"); */
 		
 	}
 
@@ -1537,7 +1702,7 @@ class isvoid extends Expression {
     }
 
 	public void analyze (ExpressionNode exprNode, ProgramTable programTable) {
-		/* Respective semantic analysis */
+		/* Un error se reporta llamando a: reportError(programTable, exprNode, "El mensaje"); */
 		
 	}
 }
@@ -1569,8 +1734,8 @@ class no_expr extends Expression {
     }
 
 	public void analyze (ExpressionNode exprNode, ProgramTable programTable) {
-		/* Respective semantic analysis */
-		
+		/* Un error se reporta llamando a: reportError(programTable, exprNode, "El mensaje"); */
+		this.set_type(TreeConstants.No_type);
 	}
 
 }
@@ -1602,14 +1767,33 @@ class object extends Expression {
     public void dump_with_types(PrintStream out, int n) {
         dump_line(out, n);
         out.println(Utilities.pad(n) + "_object");
-	dump_AbstractSymbol(out, n + 2, name);
-	dump_type(out, n);
+		dump_AbstractSymbol(out, n + 2, name);
+		dump_type(out, n);
     }
 
 	public void analyze (ExpressionNode exprNode, ProgramTable programTable) {
-		/* Respective semantic analysis */
-		
+		/* Un error se reporta llamando a: reportError(programTable, exprNode, "El mensaje"); */
+		ClassNode currClass = programTable.classMap.get(exprNode.className);
+		AbstractSymbol superType = (AbstractSymbol)currClass.symbolTable.lookup(name);
+		if ( superType != null) {
+			this.set_type(superType);
+		} else {
+			reportError(programTable, exprNode, "ObjectID used but not defined");
+			this.set_type(TreeConstants.Object_);
+		}
+			
 	}
 
 }
+
+
+
+
+	//-----------------------------------------------------------------------------------------
+	//
+	// Finalizacion de constantes e ids
+	//
+	//-----------------------------------------------------------------------------------------
+
+
 
