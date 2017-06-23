@@ -110,7 +110,7 @@ class ClassNode {
 		for (AbstractSymbol attrKey : attributeMap.keySet()) {
 			AttributeNode currAttr = attributeMap.get(attrKey);
 			currAttr.fillParents(className);
-			symbolTable.addId(attrKey, currAttr.type);
+			symbolTable.addId(attrKey, currAttr);
 		}
 	}
 
@@ -176,7 +176,11 @@ class AttributeNode {
 		*/
 
 		init.traverse(progTable);
-
+		if ( !(init.type).equals(TreeConstants.No_type) && !(init.type).equals(type) ) {
+			errorReport.semantError(fileErrorName, errorAttribute);
+			System.out.println("Init type " + init.type + " does not match with the declared type "
+						+ type);
+		}
 	}
 }
 
@@ -224,6 +228,11 @@ class MethodNode {
 		*/
 		progTable.classMap.get(fatherClass).symbolTable.enterScope();  // entra a un nuevo scope (el del metodo)
 		expr.traverse(progTable);
+		if ( !(expr.type).equals(returnType) ) {
+			errorReport.semantError(fileErrorName, errorMethod);
+			System.out.println( "Expression type " + expr.type + " does not match with the return type "
+						+ returnType );
+		}
 		progTable.classMap.get(fatherClass).symbolTable.exitScope();  // sale de ese scope (el del metodo)
 	}
 }
@@ -251,7 +260,7 @@ class ExpressionNode {
 	//-----------------------------------------------------------------------------------------
 	public ExpressionNode (Expression expr) {
 		this.expr = expr;
-		this.type = expr.get_type();
+		this.type = null;
 	}
 
 	//-----------------------------------------------------------------------------------------
@@ -270,5 +279,6 @@ class ExpressionNode {
 	public void traverse(ProgramTable progTable) {
 
 		expr.analyze(this, progTable);
+		type = expr.get_type();
 	}
 }
