@@ -30,7 +30,7 @@ class ProgramTable {
 				}
 				System.out.println(")");
 				System.out.println("\t\tExpr = ParentClass: " + currMethod.expr.className 
-						+ " MethodName: " + currMethod.expr.methodName
+						+ " MethodName: " + currMethod.expr.featureName
 						+ " Type: " + currMethod.expr.type
 						+ " IsInit: " + currMethod.expr.isInit);
 			}
@@ -44,12 +44,14 @@ class ProgramTable {
 		}
 	}
 
+
 	public void traverse() {
 		for (AbstractSymbol classKey : classMap.keySet()) {
 			ClassNode currClass = classMap.get(classKey);
 			currClass.traverse(this);
 		}
 	}
+
 }
 
 class ClassNode {
@@ -82,6 +84,7 @@ class ClassNode {
 		}
 	}
 
+
 	public void traverse(ProgramTable progTable) {
 		for (AbstractSymbol methodKey : methodMap.keySet()) {
 			MethodNode currMethod = methodMap.get(methodKey);
@@ -92,6 +95,7 @@ class ClassNode {
 			currAttr.traverse(progTable);
 		}
 	}
+
 }
 
 class AttributeNode {
@@ -109,10 +113,12 @@ class AttributeNode {
 	public void fillParents(AbstractSymbol className) {
 		this.fatherClass = className;
 		init.fillParents(className, name, true);
+
 	}
 
 	public void traverse(ProgramTable progTable) {
 		init.traverse(progTable);
+
 	}
 }
 
@@ -121,26 +127,28 @@ class MethodNode {
 	public AbstractSymbol name;
 	public AbstractSymbol returnType;
 	public ExpressionNode expr;
-	public HashMap<AbstractSymbol, Expression> scope;
 
+	public HashMap<AbstractSymbol, Expression> scope;
 	public HashMap<AbstractSymbol, FormalNode> formalMap;
 
 	public MethodNode(AbstractSymbol returnType, AbstractSymbol name, Expression expr) {
 		formalMap = new HashMap<AbstractSymbol, FormalNode>();
+		scope = new HashMap<AbstractSymbol, Expression>();
 		this.expr = new ExpressionNode (expr);
 		this.name = name;
 		this.returnType = returnType;
-		scope = new HashMap<AbstractSymbol, Expression>();
 	}
 
 	public void fillParents(AbstractSymbol className) {
 		this.fatherClass = className;
 		expr.fillParents(className, name, false);
 	}
+
 	
 	public void traverse(ProgramTable progTable) {
 		expr.traverse(progTable);
 	}
+
 }
 
 class FormalNode {
@@ -153,7 +161,7 @@ class FormalNode {
 
 class ExpressionNode {
 	public AbstractSymbol className;
-	public AbstractSymbol methodName;
+	public AbstractSymbol featureName;
 	public AbstractSymbol type;
 	public Expression expr;
 	public boolean isInit;
@@ -163,13 +171,15 @@ class ExpressionNode {
 		this.type = expr.get_type();
 	}
 
-	public void fillParents(AbstractSymbol className, AbstractSymbol methodName, boolean isInit) {
+	public void fillParents(AbstractSymbol className, AbstractSymbol featureName, boolean isInit) {
 		this.className = className;
-		this.methodName = methodName;
+		this.featureName = featureName;
 		this.isInit = isInit;
 	}
+
 
 	public void traverse(ProgramTable progTable) {
 		expr.analyze(this, progTable);
 	}
+
 }
