@@ -982,8 +982,20 @@ class let extends Expression {
 	public void analyze (ExpressionNode exprNode, ProgramTable programTable) {
 		/* Un error se reporta llamando a: reportError(programTable, exprNode, "El mensaje"); */
 		
-	    	init.analyze(exprNode, programTable);
-		body.analyze(exprNode, programTable);
+	    	ClassNode currC = programTable.classMap.get(exprNode.className);
+		if (!exprNode.isInit) {
+			init.analyze(exprNode, programTable);
+			MethodNode currMethod = currC.methodMap.get(exprNode.methodName);
+			currC.symbolTable.addId(type_decl, init);
+			body.analyze(exprNode, programTable);
+			this.set_type(body.get_type());
+			currC.symbolTable.exitScope();
+		} else {
+			programTable.classTable.semantError(currC.fileName, this);
+			System.out.println("Assignation of let expression in attribute declaration");
+			this.set_type(TreeConstants.Object_);
+		}
+
 	}
 
 }
@@ -1236,7 +1248,7 @@ class neg extends Expression {
 		if ( (this.e1.get_type()).equals(TreeConstants.Int) ) {
 			this.set_type(TreeConstants.Int);
 		} else {
-			reportError(programTable, exprNode, "Subexpressions of multiplication does not match type Int");
+			reportError(programTable, exprNode, "Subexpressions of negation does not match type Int");
 			this.set_type(TreeConstants.Object_);	//Si no son ints, se pone tipo Object para identificar el error
 		}
 	}
