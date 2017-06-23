@@ -1032,17 +1032,23 @@ class plus extends Expression {
 
 	public void analyze (ExpressionNode exprNode, ProgramTable programTable) {
 		/* Un error se reporta llamando a: reportError(programTable, exprNode, "El mensaje"); */
-		ClassNode currClass = programTable.classMap.get(exprNode.className);
-	    e1.analyze(exprNode, programTable);
-		e2.analyze(exprNode, programTable);
+		/* Manda a las subexpresiones de la suma a verificarse */
+	    	this.e1.analyze(exprNode, programTable);
+		this.e2.analyze(exprNode, programTable);
+		/* Revisa que ambas subexpresiones sean del tipo entero */
+		if ( (this.e1.get_type()).equals(TreeConstants.Int) && (this.e2.get_type()).equals(TreeConstants.Int) ) {
+			this.set_type(TreeConstants.Int);
+		} else {
+			reportError(programTable, exprNode, "Subexpressions of sumation does not match type Int");
+			this.set_type(TreeConstants.Object_);	//Si no son ints, se pone tipo Object para identificar el error
+		}
 	}
 
 }
 
 
 /** Defines AST constructor 'sub'.
-    <p>
-    See <a href="TreeNode.html">TreeNode</a> for full documentation. */
+    See TreeNode for full documentation. */
 class sub extends Expression {
     protected Expression e1;
     protected Expression e2;
@@ -1070,23 +1076,29 @@ class sub extends Expression {
     public void dump_with_types(PrintStream out, int n) {
         dump_line(out, n);
         out.println(Utilities.pad(n) + "_sub");
-	e1.dump_with_types(out, n + 2);
-	e2.dump_with_types(out, n + 2);
-	dump_type(out, n);
+		e1.dump_with_types(out, n + 2);
+		e2.dump_with_types(out, n + 2);
+		dump_type(out, n);
     }
 
 	public void analyze (ExpressionNode exprNode, ProgramTable programTable) {
 		/* Un error se reporta llamando a: reportError(programTable, exprNode, "El mensaje"); */
-		
-	    e1.analyze(exprNode, programTable);
-		e2.analyze(exprNode, programTable);
+		/* Manda a las subexpresiones de la resta a verificarse */
+	    this.e1.analyze(exprNode, programTable);
+		this.e2.analyze(exprNode, programTable);
+		/* Revisa que ambas subexpresiones sean del tipo entero */
+		if ( (this.e1.get_type()).equals(TreeConstants.Int) && (this.e2.get_type()).equals(TreeConstants.Int) ) {
+			this.set_type(TreeConstants.Int);
+		} else {
+			reportError(programTable, exprNode, "Subexpressions of substraction does not match type Int");
+			this.set_type(TreeConstants.Object_);	//Si no son ints, se pone tipo Object para identificar el error
+		}
 	}
 }
 
 
 /** Defines AST constructor 'mul'.
-    <p>
-    See <a href="TreeNode.html">TreeNode</a> for full documentation. */
+    See TreeNode for full documentation. */
 class mul extends Expression {
     protected Expression e1;
     protected Expression e2;
@@ -1121,17 +1133,23 @@ class mul extends Expression {
 
 	public void analyze (ExpressionNode exprNode, ProgramTable programTable) {
 		/* Un error se reporta llamando a: reportError(programTable, exprNode, "El mensaje"); */
-		
-		e1.analyze(exprNode, programTable);
-		e2.analyze(exprNode, programTable);
+		/* Manda a las subexpresiones de la multiplicacion a verificarse */
+	    this.e1.analyze(exprNode, programTable);
+		this.e2.analyze(exprNode, programTable);
+		/* Revisa que ambas subexpresiones sean del tipo entero */
+		if ( (this.e1.get_type()).equals(TreeConstants.Int) && (this.e2.get_type()).equals(TreeConstants.Int) ) {
+			this.set_type(TreeConstants.Int);
+		} else {
+			reportError(programTable, exprNode, "Subexpressions of multiply does not match type Int");
+			this.set_type(TreeConstants.Object_);	//Si no son ints, se pone tipo Object para identificar el error
+		}
 	}
 
 }
 
 
 /** Defines AST constructor 'divide'.
-    <p>
-    See <a href="TreeNode.html">TreeNode</a> for full documentation. */
+    See TreeNode for full documentation. */
 class divide extends Expression {
     protected Expression e1;
     protected Expression e2;
@@ -1166,17 +1184,23 @@ class divide extends Expression {
 
 	public void analyze (ExpressionNode exprNode, ProgramTable programTable) {
 		/* Un error se reporta llamando a: reportError(programTable, exprNode, "El mensaje"); */
-		
-	    	e1.analyze(exprNode, programTable);
-		e2.analyze(exprNode, programTable);
+		/* Manda a las subexpresiones de la división a verificarse */
+	    this.e1.analyze(exprNode, programTable);
+		this.e2.analyze(exprNode, programTable);
+		/* Revisa que ambas subexpresiones sean del tipo entero */
+		if ( (this.e1.get_type()).equals(TreeConstants.Int) && (this.e2.get_type()).equals(TreeConstants.Int) ) {
+			this.set_type(TreeConstants.Int);
+		} else {
+			reportError(programTable, exprNode, "Subexpressions of divide does not match type Int");
+			this.set_type(TreeConstants.Object_);	//Si no son ints, se pone tipo Object para identificar el error
+		}
 	}
 
 }
 
 
 /** Defines AST constructor 'neg'.
-    <p>
-    See <a href="TreeNode.html">TreeNode</a> for full documentation. */
+    See TreeNode for full documentation. */
 class neg extends Expression {
     protected Expression e1;
     /** Creates "neg" AST node. 
@@ -1206,8 +1230,15 @@ class neg extends Expression {
 
 	public void analyze (ExpressionNode exprNode, ProgramTable programTable) {
 		/* Un error se reporta llamando a: reportError(programTable, exprNode, "El mensaje"); */
-		
-	    	e1.analyze(exprNode, programTable);
+		/* Manda a la subexpresion de la negacion a verificarse */
+	    this.e1.analyze(exprNode, programTable);
+		/* Revisa que ambas subexpresiones sean del tipo entero */
+		if ( (this.e1.get_type()).equals(TreeConstants.Int) ) {
+			this.set_type(TreeConstants.Int);
+		} else {
+			reportError(programTable, exprNode, "Subexpressions of multiplication does not match type Int");
+			this.set_type(TreeConstants.Object_);	//Si no son ints, se pone tipo Object para identificar el error
+		}
 	}
 
 }
@@ -1221,12 +1252,16 @@ class neg extends Expression {
 
 
 
+	//-----------------------------------------------------------------------------------------
+	//
+	// Inicio de expresiones booleanas
+	//
+	//-----------------------------------------------------------------------------------------
 
 
 
 /** Defines AST constructor 'lt'.
-    <p>
-    See <a href="TreeNode.html">TreeNode</a> for full documentation. */
+    See TreeNode for full documentation. */
 class lt extends Expression {
     protected Expression e1;
     protected Expression e2;
@@ -1395,6 +1430,16 @@ class comp extends Expression {
 }
 
 
+	//-----------------------------------------------------------------------------------------
+	//
+	// Finalización de expresiones aritméticas
+	//
+	//-----------------------------------------------------------------------------------------
+
+
+
+
+
 /** Defines AST constructor 'int_const'.
     <p>
     See <a href="TreeNode.html">TreeNode</a> for full documentation. */
@@ -1427,7 +1472,7 @@ class int_const extends Expression {
 
 	public void analyze (ExpressionNode exprNode, ProgramTable programTable) {
 		/* Un error se reporta llamando a: reportError(programTable, exprNode, "El mensaje"); */
-		
+		this.set_type(TreeConstants.Int);
 	}
 
 }
@@ -1465,7 +1510,7 @@ class bool_const extends Expression {
 
 	public void analyze (ExpressionNode exprNode, ProgramTable programTable) {
 		/* Un error se reporta llamando a: reportError(programTable, exprNode, "El mensaje"); */
-		
+		this.set_type(TreeConstants.Bool);
 	}
 
 }
@@ -1644,8 +1689,8 @@ class object extends Expression {
     public void dump_with_types(PrintStream out, int n) {
         dump_line(out, n);
         out.println(Utilities.pad(n) + "_object");
-	dump_AbstractSymbol(out, n + 2, name);
-	dump_type(out, n);
+		dump_AbstractSymbol(out, n + 2, name);
+		dump_type(out, n);
     }
 
 	public void analyze (ExpressionNode exprNode, ProgramTable programTable) {
