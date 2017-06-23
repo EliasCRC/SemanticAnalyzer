@@ -222,7 +222,7 @@ class ClassTable {
 	/* fill this in */
     }
     
-    public boolean isBasicClass(AbstractSymbol currClass) {
+    public static boolean isBasicClass(AbstractSymbol currClass) {
     	if (currClass == TreeConstants.Object_ || currClass == TreeConstants.IO 
     	|| currClass == TreeConstants.Int || currClass ==  TreeConstants.Str
     	|| currClass == TreeConstants.Bool) {
