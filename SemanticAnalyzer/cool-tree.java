@@ -1278,6 +1278,8 @@ class neg extends Expression {
 
 
 
+
+
 /** Defines AST constructor 'lt'.
     See TreeNode for full documentation. */
 class lt extends Expression {
@@ -1317,6 +1319,13 @@ class lt extends Expression {
 		
 	    	e1.analyze(exprNode, programTable);
 		e2.analyze(exprNode, programTable);
+		
+		if ( (this.e1.get_type()).equals(TreeConstants.Int) && (this.e2.get_type()).equals(TreeConstants.Int) ) {
+			this.set_type(TreeConstants.Bool);
+		} else {
+			reportError(programTable, exprNode, "Subexpresions of It does not match with type Int");
+			this.set_type(TreeConstants.Object_);	//Si no son bools, se pone tipo Object para identificar el error
+		}
 	}
 }
 
@@ -1361,6 +1370,12 @@ class eq extends Expression {
 		
 	    	e1.analyze(exprNode, programTable);
 		e2.analyze(exprNode, programTable);
+		if ( (((this.e1.get_type()).equals(TreeConstants.Bool)&&(this.e2.get_type()).equals(TreeConstants.Bool)) || ((this.e1.get_type()).equals(TreeConstants.Int) && (this.e2.get_type()).equals(TreeConstants.Int)) || ((this.e1.get_type()).equals(TreeConstants.Str)&& (this.e2.get_type()).equals(TreeConstants.Str)))&& (this.e1.get_type()!= null && this.e1.get_type()!= null )) {
+			this.set_type(TreeConstants.Bool);
+		} else {
+			reportError(programTable, exprNode, "Subexpressions of equal does not match with same type");
+			this.set_type(TreeConstants.Object_);	//Si no son bools, se pone tipo Object para identificar el error
+		}
 	}
 }
 
@@ -1405,6 +1420,12 @@ class leq extends Expression {
 		
 	    	e1.analyze(exprNode, programTable);
 		e2.analyze(exprNode, programTable);
+		if ( (this.e1.get_type()).equals(TreeConstants.Int) && (this.e2.get_type()).equals(TreeConstants.Bool) ) {
+			this.set_type(TreeConstants.Int);
+		} else {
+			reportError(programTable, exprNode, "Subexpressions of leq does not match type Int");
+			this.set_type(TreeConstants.Object_);	//Si no son bools, se pone tipo Object para identificar el error
+		}
 	}
 }
 
@@ -1443,6 +1464,12 @@ class comp extends Expression {
 		/* Un error se reporta llamando a: reportError(programTable, exprNode, "El mensaje"); */
 		
 	    	e1.analyze(exprNode, programTable);
+	    	if ( (this.e1.get_type()).equals(TreeConstants.Bool) ) {
+			this.set_type(TreeConstants.Bool);
+		} else {
+			reportError(programTable, exprNode, "Subexpression of compare does not match type Bool");
+			this.set_type(TreeConstants.Object_);	//Si no son ints, se pone tipo Object para identificar el error
+		}
 	}
 
 }
@@ -1450,7 +1477,7 @@ class comp extends Expression {
 
 	//-----------------------------------------------------------------------------------------
 	//
-	// Finalización de expresiones aritméticas
+	// Finalización de expresiones Booleanas
 	//
 	//-----------------------------------------------------------------------------------------
 
