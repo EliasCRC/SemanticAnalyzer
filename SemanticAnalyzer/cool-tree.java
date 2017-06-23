@@ -303,7 +303,6 @@ class programc extends Program {
 	Decorate the abstract syntax tree with type information
         by setting the type field in each Expression node.
         (see tree.h)
-
 	You are free to first do (1) and make sure you catch all semantic
     	errors. Part (2) can be done in a second stage when you want
 	to test the complete compiler.
@@ -935,8 +934,7 @@ class block extends Expression {
 
 
 /** Defines AST constructor 'let'.
-    <p>
-    See <a href="TreeNode.html">TreeNode</a> for full documentation. */
+    See TreeNode for full documentation. */
 class let extends Expression {
     protected AbstractSymbol identifier;
     protected AbstractSymbol type_decl;
@@ -986,7 +984,7 @@ class let extends Expression {
 		if (!exprNode.isInit) {
 			currC.symbolTable.enterScope();
 			init.analyze(exprNode, programTable);
-			if ( !(init.get_type()).equals(type_decl) ) {
+			if ( !(init.get_type()).equals(TreeConstants.No_type) && !(init.get_type()).equals(type_decl) ) {
 				programTable.classTable.semantError(currC.fileName, this);
 				System.out.println("Assignment of different types in let expression");
 				type_decl = TreeConstants.Object_;
@@ -1278,8 +1276,6 @@ class neg extends Expression {
 
 
 
-
-
 /** Defines AST constructor 'lt'.
     See TreeNode for full documentation. */
 class lt extends Expression {
@@ -1479,7 +1475,16 @@ class comp extends Expression {
 
 	//-----------------------------------------------------------------------------------------
 	//
-	// Finalización de expresiones Booleanas
+	// Finalización de expresiones booleanas
+	//
+	//-----------------------------------------------------------------------------------------
+
+
+
+
+	//-----------------------------------------------------------------------------------------
+	//
+	// Inicio de constantes e ids
 	//
 	//-----------------------------------------------------------------------------------------
 
@@ -1488,8 +1493,7 @@ class comp extends Expression {
 
 
 /** Defines AST constructor 'int_const'.
-    <p>
-    See <a href="TreeNode.html">TreeNode</a> for full documentation. */
+    See TreeNode for full documentation. */
 class int_const extends Expression {
     protected AbstractSymbol token;
     /** Creates "int_const" AST node. 
@@ -1704,7 +1708,7 @@ class no_expr extends Expression {
 
 	public void analyze (ExpressionNode exprNode, ProgramTable programTable) {
 		/* Un error se reporta llamando a: reportError(programTable, exprNode, "El mensaje"); */
-		
+		this.set_type(TreeConstants.No_type);
 	}
 
 }
@@ -1743,7 +1747,26 @@ class object extends Expression {
 	public void analyze (ExpressionNode exprNode, ProgramTable programTable) {
 		/* Un error se reporta llamando a: reportError(programTable, exprNode, "El mensaje"); */
 		ClassNode currClass = programTable.classMap.get(exprNode.className);
+		AbstractSymbol superType = (AbstractSymbol)currClass.symbolTable.lookup(name);
+		if ( superType != null) {
+			this.set_type(superType);
+		} else {
+			reportError(programTable, exprNode, "ObjectID used but not defined");
+			this.set_type(TreeConstants.Object_);
+		}
 			
 	}
 
 }
+
+
+
+
+	//-----------------------------------------------------------------------------------------
+	//
+	// Finalizacion de constantes e ids
+	//
+	//-----------------------------------------------------------------------------------------
+
+
+
