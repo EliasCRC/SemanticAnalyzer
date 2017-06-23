@@ -1,14 +1,21 @@
 import java.util.HashMap;
 
 class ProgramTable {
-	public HashMap<AbstractSymbol, ClassNode> classMap;
-	public ClassTable classTable;
 
+	public HashMap<AbstractSymbol, ClassNode> classMap; //Mapa que relaciona Nombre -> Clase
+	public ClassTable classTable;		//Para reporte de errores
+
+	//-----------------------------------------------------------------------------------------
+	// Constructor
+	//-----------------------------------------------------------------------------------------
 	public ProgramTable(ClassTable classTable) {
 		this.classMap = new HashMap<AbstractSymbol, ClassNode>();
 		this.classTable = classTable;
 	}
 
+	//-----------------------------------------------------------------------------------------
+	// Imprime la tabla para verificar que se construyó correctamente
+	//-----------------------------------------------------------------------------------------
 	public void print() {
 		for (AbstractSymbol classKey : classMap.keySet()) {
 			ClassNode currClass = classMap.get(classKey);
@@ -30,39 +37,48 @@ class ProgramTable {
 				}
 				System.out.println(")");
 				System.out.println("\t\tExpr = ParentClass: " + currMethod.expr.className 
-						+ " MethodName: " + currMethod.expr.featureName
+						+ " MethodName: " + currMethod.expr.methodName
 						+ " Type: " + currMethod.expr.type
 						+ " IsInit: " + currMethod.expr.isInit);
 			}
 		}
 	}
 
+	//-----------------------------------------------------------------------------------------
+	// Le dice a las clases que le indiquen a los features cual es su clase contenedora
+	//-----------------------------------------------------------------------------------------
 	public void fillFeatures() {
 		for (AbstractSymbol classKey : classMap.keySet()) {
 			ClassNode currClass = classMap.get(classKey);
 			currClass.fillFeatures();
 		}
 	}
-
-
+	
+	//-----------------------------------------------------------------------------------------
+	// Recorre la tabla para la verificación semántica, y se manda a sí mismo
+	// Por si necesitan recorrer la tabla por separado.
+	//-----------------------------------------------------------------------------------------
 	public void traverse() {
+
 		for (AbstractSymbol classKey : classMap.keySet()) {
 			ClassNode currClass = classMap.get(classKey);
 			currClass.traverse(this);
 		}
 	}
-
 }
 
 class ClassNode {
-	public AbstractSymbol parentName;
-	public AbstractSymbol fileName;
-	public AbstractSymbol className;
-	public class_c errorClass;
-
-	public HashMap<AbstractSymbol, AttributeNode> attributeMap;
-	public HashMap<AbstractSymbol, MethodNode> methodMap;
+	public AbstractSymbol parentName; 	//Nombre de clase de la que hereda
+	public AbstractSymbol fileName;		//Nombre de archivo
+	public AbstractSymbol className;	//Nombre de ella misma 
+	public class_c errorClass;		//Nodo del arbol para erores
 	
+	public HashMap<AbstractSymbol, AttributeNode> attributeMap;	//Mapa para relacionar Nombre -> Atributo
+	public HashMap<AbstractSymbol, MethodNode> methodMap;		//Mapa para relacionar Nombre -> Método
+	
+	//-----------------------------------------------------------------------------------------
+	// Constructor
+	//-----------------------------------------------------------------------------------------
 	public ClassNode(AbstractSymbol fileName, AbstractSymbol className, AbstractSymbol parentName, class_c errorClass) {
 		this.fileName = fileName;
 		this.parentName = parentName;
@@ -73,6 +89,9 @@ class ClassNode {
 		methodMap = new HashMap<AbstractSymbol, MethodNode>();
 	}
 
+	//-----------------------------------------------------------------------------------------
+	// Le dice a los Features cual es su clase contenedora
+	//-----------------------------------------------------------------------------------------
 	public void fillFeatures() {
 		for (AbstractSymbol methodKey : methodMap.keySet()) {
 			MethodNode currMethod = methodMap.get(methodKey);
@@ -84,8 +103,17 @@ class ClassNode {
 		}
 	}
 
-
+	//-----------------------------------------------------------------------------------------
+	// Recorre los métodos y atributos, además hace la respectiva revisión semántica
+	//-----------------------------------------------------------------------------------------
 	public void traverse(ProgramTable progTable) {
+		ClassTable errorReport = progTable.classTable;
+		/* Un error se reportaría de la manera:
+ 
+			errorReport.semantError(this.errorClass);
+			System.out.println("El error");
+		*/
+
 		for (AbstractSymbol methodKey : methodMap.keySet()) {
 			MethodNode currMethod = methodMap.get(methodKey);
 			currMethod.traverse(progTable);
@@ -99,87 +127,138 @@ class ClassNode {
 }
 
 class AttributeNode {
-	public AbstractSymbol fatherClass;
-	public AbstractSymbol name;
-	public AbstractSymbol type;
-	public ExpressionNode init;
+	public AbstractSymbol fatherClass;	//Nombre de la clase que la contiene
+	public AbstractSymbol name;		//Nombre del atributo
+	public AbstractSymbol type;		//Tipo específicado por usuario
+	public ExpressionNode init;		//Expresion de inicializacion
+	public attr errorAttribute;		//Nodo del árbol para reportar errores
 
-	public AttributeNode(AbstractSymbol type, AbstractSymbol name, Expression init) {
+	//-----------------------------------------------------------------------------------------
+	// Constructor
+	//-----------------------------------------------------------------------------------------
+	public AttributeNode(AbstractSymbol type, AbstractSymbol name, attr errorAttribute, Expression init) {
 		this.name = name;
 		this.type = type;
+		this.errorAttribute = errorAttribute;
 		this.init = new ExpressionNode(init);
 	}
 
+	//-----------------------------------------------------------------------------------------
+	// Pone el nombre de la clase padre y manda valores necesarios para que la expresion
+	// esté completa.
+	//-----------------------------------------------------------------------------------------
 	public void fillParents(AbstractSymbol className) {
 		this.fatherClass = className;
 		init.fillParents(className, name, true);
-
 	}
 
+	//-----------------------------------------------------------------------------------------
+	// Manda a revisar la inicialización, además hace la respectiva revisión semántica
+	//-----------------------------------------------------------------------------------------
 	public void traverse(ProgramTable progTable) {
+		ClassTable errorReport = progTable.classTable;
+		AbstractSymbol fileErrorName = ( progTable.classMap.get(this.fatherClass) ).fileName;
+		/* Un error se reportaría de la manera:
+ 
+			errorReport.semantError(fileErrorName, errorAttribute);
+			System.out.println("El error");
+		*/
+
 		init.traverse(progTable);
 
 	}
 }
 
 class MethodNode {
-	public AbstractSymbol fatherClass;
-	public AbstractSymbol name;
-	public AbstractSymbol returnType;
-	public ExpressionNode expr;
+	public AbstractSymbol fatherClass;	//Nombre de la clase que la contiene
+	public AbstractSymbol name;		//Nombre del método
+	public AbstractSymbol returnType;	//Tipo de retorno especificado
+	public ExpressionNode expr;		//Expresion que contiene el método
+	public method errorMethod;		//Nodo del árbol para reportar errores
 
-	public HashMap<AbstractSymbol, Expression> scope;
-	public HashMap<AbstractSymbol, FormalNode> formalMap;
+	public HashMap<AbstractSymbol, FormalNode> formalMap = new HashMap<AbstractSymbol, FormalNode>();
+	//Relaciona con un mapa los parámetros de forma Nombre -> Formal
 
-	public MethodNode(AbstractSymbol returnType, AbstractSymbol name, Expression expr) {
-		formalMap = new HashMap<AbstractSymbol, FormalNode>();
-		scope = new HashMap<AbstractSymbol, Expression>();
-		this.expr = new ExpressionNode (expr);
+	//-----------------------------------------------------------------------------------------
+	// Constructor
+	//-----------------------------------------------------------------------------------------
+	public MethodNode(AbstractSymbol returnType, AbstractSymbol name, method errorMethod, Expression expr) {
 		this.name = name;
 		this.returnType = returnType;
+		this.errorMethod = errorMethod;
+		this.expr = new ExpressionNode (expr);
+
+		formalMap = new HashMap<AbstractSymbol, FormalNode>();
 	}
 
+	//-----------------------------------------------------------------------------------------
+	// Pone el nombre de la clase padre y manda valores necesarios para que la expresion
+	// esté completa.
+	//-----------------------------------------------------------------------------------------
 	public void fillParents(AbstractSymbol className) {
 		this.fatherClass = className;
 		expr.fillParents(className, name, false);
 	}
 
-	
+	//-----------------------------------------------------------------------------------------
+	// Manda a revisar la expresión, además hace la respectiva revisión semántica
+	//-----------------------------------------------------------------------------------------
 	public void traverse(ProgramTable progTable) {
+		ClassTable errorReport = progTable.classTable;
+		AbstractSymbol fileErrorName = ( progTable.classMap.get(fatherClass) ).fileName;
+		/* Un error se reportaría de la manera:
+ 
+			errorReport.semantError(fileErrorName, errorMethod);
+			System.out.println("El error");
+		*/
+
 		expr.traverse(progTable);
 	}
-
 }
 
 class FormalNode {
-	public AbstractSymbol type;
+	public AbstractSymbol type; //Tipo del parámetro
 
+	//-----------------------------------------------------------------------------------------
+	// Constructor
+	//-----------------------------------------------------------------------------------------
 	public FormalNode(AbstractSymbol type) {
 		this.type = type;
 	}
 }
 
 class ExpressionNode {
-	public AbstractSymbol className;
-	public AbstractSymbol featureName;
-	public AbstractSymbol type;
-	public Expression expr;
-	public boolean isInit;
+	public AbstractSymbol className;	//Nombre de la clase en que está
+	public AbstractSymbol methodName;	//Nombre del método en que está
+	public AbstractSymbol type;		//Tipo de la expresión init (atributo) o expr (método)
+	public Expression expr;			//Expresión init o expr
+	public boolean isInit;			//Indica si es una inicialización de atributo o expresión de método
 
+	//-----------------------------------------------------------------------------------------
+	// Constructor
+	//-----------------------------------------------------------------------------------------
 	public ExpressionNode (Expression expr) {
 		this.expr = expr;
 		this.type = expr.get_type();
 	}
 
-	public void fillParents(AbstractSymbol className, AbstractSymbol featureName, boolean isInit) {
+	//-----------------------------------------------------------------------------------------
+	// Llena todos los campos de la expresión que no se llenaron en el constructor
+	//-----------------------------------------------------------------------------------------
+	public void fillParents(AbstractSymbol className, AbstractSymbol methodName, boolean isInit) {
 		this.className = className;
-		this.featureName = featureName;
+		this.methodName = methodName;
 		this.isInit = isInit;
 	}
 
-
+	//-----------------------------------------------------------------------------------------
+	// Manda a revisar la o las expresiones que contenga es expresión externa, 
+	// además hace la respectiva revisión semántica
+	//-----------------------------------------------------------------------------------------
 	public void traverse(ProgramTable progTable) {
+
 		expr.analyze(this, progTable);
 	}
-
 }
+
+
