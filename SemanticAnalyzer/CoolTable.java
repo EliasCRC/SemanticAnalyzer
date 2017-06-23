@@ -44,14 +44,12 @@ class ProgramTable {
 		}
 	}
 
-
 	public void traverse() {
 		for (AbstractSymbol classKey : classMap.keySet()) {
 			ClassNode currClass = classMap.get(classKey);
 			currClass.traverse(this);
 		}
 	}
-
 }
 
 class ClassNode {
@@ -84,7 +82,6 @@ class ClassNode {
 		}
 	}
 
-
 	public void traverse(ProgramTable progTable) {
 		for (AbstractSymbol methodKey : methodMap.keySet()) {
 			MethodNode currMethod = methodMap.get(methodKey);
@@ -95,7 +92,6 @@ class ClassNode {
 			currAttr.traverse(progTable);
 		}
 	}
-
 }
 
 class AttributeNode {
@@ -113,12 +109,10 @@ class AttributeNode {
 	public void fillParents(AbstractSymbol className) {
 		this.fatherClass = className;
 		init.fillParents(className, name, true);
-
 	}
 
 	public void traverse(ProgramTable progTable) {
 		init.traverse(progTable);
-
 	}
 }
 
@@ -127,26 +121,26 @@ class MethodNode {
 	public AbstractSymbol name;
 	public AbstractSymbol returnType;
 	public ExpressionNode expr;
+	public HashMap<AbstractSymbol, Expression> scope;
 
-	public HashMap<AbstractSymbol, FormalNode> formalMap = new HashMap<AbstractSymbol, FormalNode>();
+	public HashMap<AbstractSymbol, FormalNode> formalMap;
 
 	public MethodNode(AbstractSymbol returnType, AbstractSymbol name, Expression expr) {
 		formalMap = new HashMap<AbstractSymbol, FormalNode>();
 		this.expr = new ExpressionNode (expr);
 		this.name = name;
 		this.returnType = returnType;
+		scope = new HashMap<AbstractSymbol, Expression>();
 	}
 
 	public void fillParents(AbstractSymbol className) {
 		this.fatherClass = className;
 		expr.fillParents(className, name, false);
 	}
-
 	
 	public void traverse(ProgramTable progTable) {
 		expr.traverse(progTable);
 	}
-
 }
 
 class FormalNode {
@@ -175,9 +169,7 @@ class ExpressionNode {
 		this.isInit = isInit;
 	}
 
-
 	public void traverse(ProgramTable progTable) {
 		expr.analyze(this, progTable);
 	}
-
 }
