@@ -585,9 +585,18 @@ class branch extends Case {
 }
 
 
+
+	//-----------------------------------------------------------------------------------------
+	//
+	// Inicia nodo de Assign
+	//
+	//-----------------------------------------------------------------------------------------
+
+
+
+
 /** Defines AST constructor 'assign'.
-    <p>
-    See <a href="TreeNode.html">TreeNode</a> for full documentation. */
+    See TreeNode for full documentation. */
 class assign extends Expression {
     protected AbstractSymbol name;
     protected Expression expr;
@@ -625,7 +634,8 @@ class assign extends Expression {
 		expr.analyze(exprNode, programTable);
 		ClassNode currC = programTable.classMap.get(exprNode.className);
 		if (name.equals(TreeConstants.self)) {
-			
+			reportError(programTable, exprNode, "Assignment of self to an element is illegal");
+			this.set_type(TreeConstants.Object_);
 		} else if ( currC.symbolTable.lookup(name) != null ) {
 			this.set_type(expr.get_type());
 		} else {
@@ -635,6 +645,17 @@ class assign extends Expression {
 	}
 
 }
+
+
+	//-----------------------------------------------------------------------------------------
+	//
+	// Termina nodo de Assign
+	//
+	//-----------------------------------------------------------------------------------------
+
+
+
+
 
 
 /** Defines AST constructor 'static_dispatch'.
@@ -847,8 +868,13 @@ class loop extends Expression {
 
 	public void analyze (ExpressionNode exprNode, ProgramTable programTable) {
 		/* Un error se reporta llamando a: reportError(programTable, exprNode, "El mensaje"); */
-		
 		pred.analyze(exprNode, programTable);
+		if ( (pred.get_type()).equals(TreeConstants.Bool) ) {
+			this.set_type(TreeConstants.Bool);
+		} else {
+			reportError(programTable, exprNode, "Predicate of while must be boolean");
+			this.set_type(TreeConstants.Object_);
+		}
 		body.analyze(exprNode, programTable);
 	}
 
@@ -969,7 +995,11 @@ class block extends Expression {
 	//
 	//-----------------------------------------------------------------------------------------
 
-
+	//-----------------------------------------------------------------------------------------
+	//
+	// Inicia nodo de let
+	//
+	//-----------------------------------------------------------------------------------------
 
 
 
@@ -1042,8 +1072,12 @@ class let extends Expression {
 		}
 
 	}
-
 }
+	//-----------------------------------------------------------------------------------------
+	//
+	// Termina nodo de let
+	//
+	//-----------------------------------------------------------------------------------------
 
 	//-----------------------------------------------------------------------------------------
 	//
