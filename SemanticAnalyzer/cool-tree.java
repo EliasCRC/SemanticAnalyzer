@@ -797,6 +797,12 @@ class cond extends Expression {
 		/* Un error se reporta llamando a: reportError(programTable, exprNode, "El mensaje"); */
 		
 		pred.analyze(exprNode, programTable);
+		if (pred.get_type() == TreeConstants.Bool) {
+			this.set_type(TreeConstants.Bool);
+		} else {
+			reportError(programTable, exprNode, "Predicate of if expression is not of type \"Bool\"");
+			this.set_type(TreeConstants.Object_);
+		}
 		then_exp.analyze(exprNode, programTable);
 		else_exp.analyze(exprNode, programTable);
 	}
