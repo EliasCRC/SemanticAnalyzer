@@ -1,3 +1,4 @@
+import java.io.PrintStream;
 import java.util.HashMap;
 
 /*
@@ -118,11 +119,12 @@ class ClassNode {
 	// Recorre los métodos y atributos, además hace la respectiva revisión semántica
 	//-----------------------------------------------------------------------------------------
 	public void traverse(ProgramTable progTable) {
-		ClassTable errorReport = progTable.classTable;
+		PrintStream errorReport;
+		AbstractSymbol fileErrorName = ( progTable.classMap.get(className) ).fileName;
 		/* Un error se reportaría de la manera:
  
-			errorReport.semantError(this.errorClass);
-			System.out.println("El error");
+			errorReport = progTable.classTable.semantError(fileErrorName, errorMethod);
+			errorReport.println("El error");
 		*/
 
 		for (AbstractSymbol methodKey : methodMap.keySet()) {
@@ -167,18 +169,18 @@ class AttributeNode {
 	// Manda a revisar la inicialización, además hace la respectiva revisión semántica
 	//-----------------------------------------------------------------------------------------
 	public void traverse(ProgramTable progTable) {
-		ClassTable errorReport = progTable.classTable;
-		AbstractSymbol fileErrorName = ( progTable.classMap.get(this.fatherClass) ).fileName;
+		PrintStream errorReport;
+		AbstractSymbol fileErrorName = ( progTable.classMap.get(fatherClass) ).fileName;
 		/* Un error se reportaría de la manera:
  
-			errorReport.semantError(fileErrorName, errorAttribute);
-			System.out.println("El error");
+			errorReport = progTable.classTable.semantError(fileErrorName, errorMethod);
+			errorReport.println("El error");
 		*/
 
 		init.traverse(progTable);
 		if ( !(init.type).equals(TreeConstants.No_type) && !(init.type).equals(type) ) {
-			errorReport.semantError(fileErrorName, errorAttribute);
-			System.out.println("Init type " + init.type + " does not match with the declared type "
+			errorReport = progTable.classTable.semantError(fileErrorName, errorAttribute);
+			errorReport.println("Init type " + init.type + " does not match with the declared type "
 						+ type);
 		}
 	}
@@ -219,18 +221,25 @@ class MethodNode {
 	// Manda a revisar la expresión, además hace la respectiva revisión semántica
 	//-----------------------------------------------------------------------------------------
 	public void traverse(ProgramTable progTable) {
-		ClassTable errorReport = progTable.classTable;
+		PrintStream errorReport;
 		AbstractSymbol fileErrorName = ( progTable.classMap.get(fatherClass) ).fileName;
 		/* Un error se reportaría de la manera:
  
-			errorReport.semantError(fileErrorName, errorMethod);
-			System.out.println("El error");
+			errorReport = progTable.classTable.semantError(fileErrorName, errorMethod);
+			errorReport.println("El error");
 		*/
+		for (AbstractSymbol formalKey : formalMap.keySet()) {
+			if(formalKey.equals(TreeConstants.self)) {
+				errorReport = progTable.classTable.semantError(fileErrorName, errorMethod);
+				errorReport.println("Cannot use self as parameter name");
+			}
+		}
+
 		progTable.classMap.get(fatherClass).symbolTable.enterScope();  // entra a un nuevo scope (el del metodo)
 		expr.traverse(progTable);
 		if ( !(expr.type).equals(returnType) ) {
-			errorReport.semantError(fileErrorName, errorMethod);
-			System.out.println( "Expression type " + expr.type + " does not match with the return type "
+			errorReport = progTable.classTable.semantError(fileErrorName, errorMethod);
+			errorReport.println( "Expression type " + expr.type + " does not match with the return type "
 						+ returnType );
 		}
 		progTable.classMap.get(fatherClass).symbolTable.exitScope();  // sale de ese scope (el del metodo)
