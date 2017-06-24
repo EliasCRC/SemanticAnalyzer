@@ -1664,11 +1664,12 @@ class new_ extends Expression {
     }
 
 	public void analyze (ExpressionNode exprNode, ProgramTable programTable) {
-		/* Un error se reporta llamando a: reportError(programTable, exprNode, "El mensaje"); */
 		if ( programTable.classMap.containsKey(type_name) || ClassTable.isBasicClass(type_name) ) {
 			this.set_type(type_name);
+		} else if ( type_name.equals(TreeConstants.SELF_TYPE) ) {
+			this.set_type(exprNode.className);
 		} else {
-			// error
+			reportError(programTable, exprNode, "Invalid TypeID for new statement"); 
 		}
 	}
 
