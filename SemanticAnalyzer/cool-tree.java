@@ -623,6 +623,15 @@ class assign extends Expression {
 	public void analyze (ExpressionNode exprNode, ProgramTable programTable) {
 		/* Un error se reporta llamando a: reportError(programTable, exprNode, "El mensaje"); */
 		expr.analyze(exprNode, programTable);
+		ClassNode currC = programTable.classMap.get(exprNode.className);
+		if (name.equals(TreeConstants.self)) {
+			
+		} else if ( currC.symbolTable.lookup(name) != null ) {
+			this.set_type(expr.get_type());
+		} else {
+			reportError(programTable, exprNode, "Assignment of value to an element that is out of scope");
+			this.set_type(TreeConstants.Object_);
+		}
 	}
 
 }
@@ -1669,6 +1678,7 @@ class new_ extends Expression {
 			this.set_type(exprNode.className);
 		} else {
 			reportError(programTable, exprNode, "Invalid TypeID for new statement"); 
+			this.set_type(TreeConstants.Object_);
 		}
 	}
 
