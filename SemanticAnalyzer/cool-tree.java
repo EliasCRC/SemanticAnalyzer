@@ -1665,7 +1665,11 @@ class new_ extends Expression {
 
 	public void analyze (ExpressionNode exprNode, ProgramTable programTable) {
 		/* Un error se reporta llamando a: reportError(programTable, exprNode, "El mensaje"); */
-		
+		if ( programTable.classMap.containsKey(type_name) || ClassTable.isBasicClass(type_name) ) {
+			this.set_type(type_name);
+		} else {
+			// error
+		}
 	}
 
 }
@@ -1703,7 +1707,8 @@ class isvoid extends Expression {
 
 	public void analyze (ExpressionNode exprNode, ProgramTable programTable) {
 		/* Un error se reporta llamando a: reportError(programTable, exprNode, "El mensaje"); */
-		
+		e1.analyze(exprNode, programTable);
+		e1.set_type(TreeConstants.Bool);
 	}
 }
 
