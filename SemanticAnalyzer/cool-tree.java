@@ -172,10 +172,9 @@ abstract class Expression extends TreeNode {
 
 	/* Metodo para reportar errores */
 	public void reportError(ProgramTable programTable, ExpressionNode expr, String msg) {
-		ClassTable errorReport = programTable.classTable;		//Agarra la classTable
 		AbstractSymbol fileErrorName = ( programTable.classMap.get(expr.className) ).fileName; //Agarra el filename
-		errorReport.semantError(fileErrorName, this);
-		System.out.println(msg);
+		PrintStream errorReport = programTable.classTable.semantError(fileErrorName, this); //Agarra la classTable
+		errorReport.println(msg);
 	}
 
 //---------------------------------------------------------------------------------------------------
@@ -1628,7 +1627,7 @@ class string_const extends Expression {
 
 	public void analyze (ExpressionNode exprNode, ProgramTable programTable) {
 		/* Un error se reporta llamando a: reportError(programTable, exprNode, "El mensaje"); */
-		
+		this.set_type(TreeConstants.Str);
 	}
 }
 
@@ -1781,13 +1780,14 @@ class object extends Expression {
 		/* Un error se reporta llamando a: reportError(programTable, exprNode, "El mensaje"); */
 		ClassNode currClass = programTable.classMap.get(exprNode.className);
 		AbstractSymbol superType = (AbstractSymbol)currClass.symbolTable.lookup(name);
-		if ( superType != null) {
+		if ( superType != null ) {
 			this.set_type(superType);
-		} else {
-			reportError(programTable, exprNode, "ObjectID used but not defined");
-			this.set_type(TreeConstants.Object_);
-		}
-			
+		} else if (name.equals(TreeConstants.self)) {
+				this.set_type(exprNode.className);
+			} else {
+				reportError(programTable, exprNode, "ObjectID used but not defined");
+				this.set_type(TreeConstants.Object_);
+			}
 	}
 
 }
