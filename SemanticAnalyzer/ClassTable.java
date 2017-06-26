@@ -182,7 +182,6 @@ class ClassTable {
 	classHashMap = 	new HashMap<AbstractSymbol,class_c>();
 	classSet = new HashSet<AbstractSymbol>();
 	nameSet = new HashSet<String>();
-	int counter = 0;
 	for (Enumeration e = cls.getElements(); e.hasMoreElements(); ) {
 	    class_c currC = (class_c)e.nextElement();
 	    if(!nameSet.contains(currC.getName().getString())){
@@ -193,7 +192,6 @@ class ClassTable {
 			errorStream.print("Redefine Class Error\n");
 		}
 	    classHashMap.put(currC.getName(),currC);
-	    counter++;
         }
 	/*Verificacion de herencia aciclica*/
         class_c currClass;
