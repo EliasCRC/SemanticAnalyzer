@@ -1084,9 +1084,6 @@ class let extends Expression {
 				type_decl = currC.className;
 			} 
 			MethodNode currMethod = currC.methodMap.get(exprNode.methodName);
-			if (currC.symbolTable.lookup(identifier) != null) {
-				reportError(programTable, exprNode, "Expression declared shadowing another");
-			}
 			currC.symbolTable.addId(identifier, type_decl);
 			body.analyze(exprNode, programTable);
 			this.set_type(body.get_type());
