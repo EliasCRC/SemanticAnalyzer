@@ -123,17 +123,24 @@ class ClassNode {
 		AbstractSymbol fileErrorName = ( progTable.classMap.get(className) ).fileName;
 		/* Un error se reportaría de la manera:
  
-			errorReport = progTable.classTable.semantError(fileErrorName, errorMethod);
+			errorReport = progTable.classTable.semantError(fileErrorName, errorClass);
 			errorReport.println("El error");
 		*/
-
-		for (AbstractSymbol methodKey : methodMap.keySet()) {
-			MethodNode currMethod = methodMap.get(methodKey);
-			currMethod.traverse(progTable);
+		if(className.equals(TreeConstants.SELF_TYPE)) {
+			errorReport = progTable.classTable.semantError(fileErrorName, errorClass);
+			errorReport.println("Cannot use SELF_TYPE as class name");
+		}
+		if (ClassTable.isBasicClass(className)) {
+			errorReport = progTable.classTable.semantError(fileErrorName, errorClass);
+			errorReport.println("Cannot redefine basic class");
 		}
 		for (AbstractSymbol attrKey : attributeMap.keySet()) {
 			AttributeNode currAttr = attributeMap.get(attrKey);
 			currAttr.traverse(progTable);
+		}
+		for (AbstractSymbol methodKey : methodMap.keySet()) {
+			MethodNode currMethod = methodMap.get(methodKey);
+			currMethod.traverse(progTable);
 		}
 	}
 
@@ -173,10 +180,17 @@ class AttributeNode {
 		AbstractSymbol fileErrorName = ( progTable.classMap.get(fatherClass) ).fileName;
 		/* Un error se reportaría de la manera:
  
-			errorReport = progTable.classTable.semantError(fileErrorName, errorMethod);
+			errorReport = progTable.classTable.semantError(fileErrorName, errorAttribute);
 			errorReport.println("El error");
 		*/
 
+		if(name.equals(TreeConstants.self)) {
+			errorReport = progTable.classTable.semantError(fileErrorName, errorAttribute);
+			errorReport.println("Cannot use self as an attribute name");
+		}
+		if ( type.equals(TreeConstants.SELF_TYPE) ) {
+			type = fatherClass;
+		}
 		init.traverse(progTable);
 		if ( !(init.type).equals(TreeConstants.No_type) && !(init.type).equals(type) ) {
 			errorReport = progTable.classTable.semantError(fileErrorName, errorAttribute);
@@ -228,14 +242,15 @@ class MethodNode {
 			errorReport = progTable.classTable.semantError(fileErrorName, errorMethod);
 			errorReport.println("El error");
 		*/
+
+		progTable.classMap.get(fatherClass).symbolTable.enterScope();  // entra a un nuevo scope (el del metodo)
 		for (AbstractSymbol formalKey : formalMap.keySet()) {
 			if(formalKey.equals(TreeConstants.self)) {
 				errorReport = progTable.classTable.semantError(fileErrorName, errorMethod);
 				errorReport.println("Cannot use self as parameter name");
 			}
+			progTable.classMap.get(fatherClass).symbolTable.addId(formalKey, formalMap.get(formalKey).type);
 		}
-
-		progTable.classMap.get(fatherClass).symbolTable.enterScope();  // entra a un nuevo scope (el del metodo)
 		expr.traverse(progTable);
 		if ( !(expr.type).equals(returnType) ) {
 			errorReport = progTable.classTable.semantError(fileErrorName, errorMethod);
@@ -253,7 +268,7 @@ class FormalNode {
 	// Constructor
 	//-----------------------------------------------------------------------------------------
 	public FormalNode(AbstractSymbol type) {
-		this.type = type;
+		this.type = type;	
 	}
 }
 
