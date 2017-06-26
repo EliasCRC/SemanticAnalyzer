@@ -321,6 +321,8 @@ class programc extends Program {
 		if (classTable.errors()) {
 	    	System.err.println("Compilation halted due to static semantic errors.");
 	    	System.exit(1);
+		} else {
+			System.out.println("Semantic analysis all clear!");	
 		}
     }
 
@@ -381,6 +383,10 @@ class class_c extends Class_ {
 
 	public void fillTable (ProgramTable programTable) {
 		programTable.classMap.put(name, new ClassNode(filename, name, parent, this));
+		if (parent.equals(TreeConstants.SELF_TYPE)) {
+			PrintStream errorReport = programTable.classTable.semantError(this);
+			errorReport.println("Explicit inheritance from SELF_TYPE");
+		}
 		for (Enumeration e = features.getElements(); e.hasMoreElements();) {
 	    		((Feature)e.nextElement()).fillTable(this, programTable);
         	}
@@ -533,6 +539,10 @@ class formalc extends Formal {
 	public void fillTable (class_c currClass, AbstractSymbol currMethod, ProgramTable programTable) {
 		ClassNode classNode = programTable.classMap.get(currClass.getName());
 		MethodNode methodNode = classNode.methodMap.get(currMethod);
+		if (methodNode.formalMap.containsKey(name)) {
+			PrintStream errorReport = programTable.classTable.semantError(classNode.fileName, this);
+			errorReport.println("Cannot duplicate a name in the scope");
+		}
 		methodNode.formalMap.put(name, new FormalNode(type_decl));
 	}
 
@@ -633,13 +643,18 @@ class assign extends Expression {
 		/* Un error se reporta llamando a: reportError(programTable, exprNode, "El mensaje"); */
 		expr.analyze(exprNode, programTable);
 		ClassNode currC = programTable.classMap.get(exprNode.className);
+
 		if (name.equals(TreeConstants.self)) {
 			reportError(programTable, exprNode, "Assignment of self to an element is illegal");
-			this.set_type(TreeConstants.Object_);
+			this.set_type(currC.className);
 		} else if ( currC.symbolTable.lookup(name) != null ) {
-			this.set_type(expr.get_type());
+			this.set_type((AbstractSymbol)currC.symbolTable.lookup(name));
 		} else {
 			reportError(programTable, exprNode, "Assignment of value to an element that is out of scope");
+			this.set_type(TreeConstants.Object_);
+		}
+		if (!expr.get_type().equals(this.get_type())) {
+			reportError(programTable, exprNode, "Expr assigned does not match in type");
 			this.set_type(TreeConstants.Object_);
 		}
 	}
@@ -1055,19 +1070,24 @@ class let extends Expression {
 		if (!exprNode.isInit) {
 			currC.symbolTable.enterScope();
 			init.analyze(exprNode, programTable);
+			if ( type_decl.equals(TreeConstants.SELF_TYPE) ) {
+				type_decl = currC.className;
+			}
 			if (!(init.get_type()).equals(TreeConstants.No_type)) {
 				if ( !(init.get_type()).equals(type_decl) ) {
-					reportError(programTable, exprNode, "Expr in let ");
+					reportError(programTable, exprNode, "Init in let does not match the type declared");
 					type_decl = TreeConstants.Object_;
 				} 
 			}
 			if (identifier.equals(TreeConstants.self)){
 				reportError(programTable, exprNode, "Assign of self in let expr");
-				type_decl = TreeConstants.Object_;
-			} else {
-				MethodNode currMethod = currC.methodMap.get(exprNode.methodName);
-				currC.symbolTable.addId(identifier, type_decl);
+				type_decl = currC.className;
+			} 
+			MethodNode currMethod = currC.methodMap.get(exprNode.methodName);
+			if (currC.symbolTable.lookup(identifier) != null) {
+				reportError(programTable, exprNode, "Expression declared shadowing another");
 			}
+			currC.symbolTable.addId(identifier, type_decl);
 			body.analyze(exprNode, programTable);
 			this.set_type(body.get_type());
 			currC.symbolTable.exitScope();
@@ -1130,18 +1150,16 @@ class plus extends Expression {
 	public void analyze (ExpressionNode exprNode, ProgramTable programTable) {
 		/* Un error se reporta llamando a: reportError(programTable, exprNode, "El mensaje"); */
 		/* Manda a las subexpresiones de la suma a verificarse */
-		this.set_type(TreeConstants.Int);
 	    	this.e1.analyze(exprNode, programTable);
 		if ( !(this.e1.get_type()).equals(TreeConstants.Int) ) {
 			reportError(programTable, exprNode, "Subexpression 1 of sumation does not match type Int");
-			this.set_type(TreeConstants.Object_);	//Si no son ints, se pone tipo Object para identificar el error
 		}
 		this.e2.analyze(exprNode, programTable);
 		/* Revisa que ambas subexpresiones sean del tipo entero */
 		if ( !(this.e2.get_type()).equals(TreeConstants.Int) ) {
 			reportError(programTable, exprNode, "Subexpression 2 of sumation does not match type Int");
-			this.set_type(TreeConstants.Object_);	//Si no son ints, se pone tipo Object para identificar el error
 		}
+		this.set_type(TreeConstants.Int);
 	}
 
 }
@@ -1184,18 +1202,16 @@ class sub extends Expression {
 	public void analyze (ExpressionNode exprNode, ProgramTable programTable) {
 		/* Un error se reporta llamando a: reportError(programTable, exprNode, "El mensaje"); */
 		/* Manda a las subexpresiones de la resta a verificarse */
-		this.set_type(TreeConstants.Int);
 	    	this.e1.analyze(exprNode, programTable);
 		if ( !(this.e1.get_type()).equals(TreeConstants.Int) ) {
 			reportError(programTable, exprNode, "Subexpression 1 of substraction does not match type Int");
-			this.set_type(TreeConstants.Object_);	//Si no son ints, se pone tipo Object para identificar el error
 		}
 		this.e2.analyze(exprNode, programTable);
 		/* Revisa que ambas subexpresiones sean del tipo entero */
 		if ( !(this.e2.get_type()).equals(TreeConstants.Int) ) {
 			reportError(programTable, exprNode, "Subexpression 2 of substraction does not match type Int");
-			this.set_type(TreeConstants.Object_);	//Si no son ints, se pone tipo Object para identificar el error
 		}
+		this.set_type(TreeConstants.Int);
 	}
 }
 
@@ -1237,18 +1253,16 @@ class mul extends Expression {
 	public void analyze (ExpressionNode exprNode, ProgramTable programTable) {
 		/* Un error se reporta llamando a: reportError(programTable, exprNode, "El mensaje"); */
 		/* Manda a las subexpresiones de la multiplicacion a verificarse */
-		this.set_type(TreeConstants.Int);
 	    	this.e1.analyze(exprNode, programTable);
 		if ( !(this.e1.get_type()).equals(TreeConstants.Int) ) {
 			reportError(programTable, exprNode, "Subexpression 1 of multiply does not match type Int");
-			this.set_type(TreeConstants.Object_);	//Si no son ints, se pone tipo Object para identificar el error
 		}
 		this.e2.analyze(exprNode, programTable);
 		/* Revisa que ambas subexpresiones sean del tipo entero */
 		if ( !(this.e2.get_type()).equals(TreeConstants.Int) ) {
 			reportError(programTable, exprNode, "Subexpression 2 of multiply does not match type Int");
-			this.set_type(TreeConstants.Object_);	//Si no son ints, se pone tipo Object para identificar el error
 		}
+		this.set_type(TreeConstants.Int);
 	}
 
 }
@@ -1291,18 +1305,16 @@ class divide extends Expression {
 	public void analyze (ExpressionNode exprNode, ProgramTable programTable) {
 		/* Un error se reporta llamando a: reportError(programTable, exprNode, "El mensaje"); */
 		/* Manda a las subexpresiones de la división a verificarse */
-		this.set_type(TreeConstants.Int);
 	    	this.e1.analyze(exprNode, programTable);
 		if ( !(this.e1.get_type()).equals(TreeConstants.Int) ) {
 			reportError(programTable, exprNode, "Subexpression 1 of divide does not match type Int");
-			this.set_type(TreeConstants.Object_);	//Si no son ints, se pone tipo Object para identificar el error
 		}
 		this.e2.analyze(exprNode, programTable);
 		/* Revisa que ambas subexpresiones sean del tipo entero */
 		if ( !(this.e2.get_type()).equals(TreeConstants.Int) ) {
 			reportError(programTable, exprNode, "Subexpression 2 of divide does not match type Int");
-			this.set_type(TreeConstants.Object_);	//Si no son ints, se pone tipo Object para identificar el error
 		}
+		this.set_type(TreeConstants.Int);
 	}
 
 }
@@ -1340,12 +1352,11 @@ class neg extends Expression {
 	public void analyze (ExpressionNode exprNode, ProgramTable programTable) {
 		/* Un error se reporta llamando a: reportError(programTable, exprNode, "El mensaje"); */
 		/* Manda a la subexpresion de la negacion a verificarse */
-		this.set_type(TreeConstants.Int);
 	    	this.e1.analyze(exprNode, programTable);
 		if ( !(this.e1.get_type()).equals(TreeConstants.Int) ) {
 			reportError(programTable, exprNode, "Subexpression 1 of sumation does not match type Int");
-			this.set_type(TreeConstants.Object_);	//Si no son ints, se pone tipo Object para identificar el error
 		}
+		this.set_type(TreeConstants.Int);
 	}
 
 }
@@ -1403,18 +1414,16 @@ class lt extends Expression {
 
 	public void analyze (ExpressionNode exprNode, ProgramTable programTable) {
 		/* Un error se reporta llamando a: reportError(programTable, exprNode, "El mensaje"); */
-		this.set_type(TreeConstants.Bool);
 	    	e1.analyze(exprNode, programTable);
 		e2.analyze(exprNode, programTable);
 		
 		if ( !(this.e1.get_type()).equals(TreeConstants.Int) ) {
 			reportError(programTable, exprNode, "Subexpresions of It does not match with type Int");
-			this.set_type(TreeConstants.Object_);	//Si no son bools, se pone tipo Object para identificar el error
 		}
 		if ( !(this.e2.get_type()).equals(TreeConstants.Int) ) {
 			reportError(programTable, exprNode, "Subexpresions of It does not match with type Int");
-			this.set_type(TreeConstants.Object_);	//Si no son bools, se pone tipo Object para identificar el error
 		}
+		this.set_type(TreeConstants.Bool);
 	}
 }
 
@@ -1459,14 +1468,23 @@ class eq extends Expression {
 		
 	    	e1.analyze(exprNode, programTable);
 		e2.analyze(exprNode, programTable);
-		if ((((this.e1.get_type()).equals(TreeConstants.Bool)&&(this.e2.get_type()).equals(TreeConstants.Bool)) 
-		      || ((this.e1.get_type()).equals(TreeConstants.Int) && (this.e2.get_type()).equals(TreeConstants.Int)) 
-		      || ((this.e1.get_type()).equals(TreeConstants.Str)&& (this.e2.get_type()).equals(TreeConstants.Str)))) {
-			this.set_type(TreeConstants.Bool);
-		} else {
-			reportError(programTable, exprNode, "Subexpressions of equal does not match with same type");
-			this.set_type(TreeConstants.Object_);	//Si no son bools, se pone tipo Object para identificar el error
+		boolean e1IsAllowedType = e1.get_type().equals(TreeConstants.Int) |
+					  e1.get_type().equals(TreeConstants.Bool) |
+					  e1.get_type().equals(TreeConstants.Str);
+		boolean e2IsAllowedType = e2.get_type().equals(TreeConstants.Int) |
+					  e2.get_type().equals(TreeConstants.Bool) |
+					  e2.get_type().equals(TreeConstants.Str);
+		if (!e1IsAllowedType) {
+			reportError(programTable, exprNode, "Subexpresion 1 must be of a valid type");
 		}
+		if (!e2IsAllowedType) {
+			reportError(programTable, exprNode, "Subexpresion 2 must be of a valid type");
+		}
+		if ( !e1.get_type().equals(e2.get_type()) ) {
+			reportError(programTable, exprNode, "Subexpresions of the comparison must match");
+		}
+
+		this.set_type(TreeConstants.Bool);
 	}
 }
 
@@ -1507,18 +1525,16 @@ class leq extends Expression {
     }
 
 	public void analyze (ExpressionNode exprNode, ProgramTable programTable) {
-		/* Un error se reporta llamando a: reportError(programTable, exprNode, "El mensaje"); */
-		this.set_type(TreeConstants.Bool);	
+		/* Un error se reporta llamando a: reportError(programTable, exprNode, "El mensaje"); */	
 	    	e1.analyze(exprNode, programTable);
 		e2.analyze(exprNode, programTable);
 		if ( !(this.e1.get_type()).equals(TreeConstants.Int) ) {
 			reportError(programTable, exprNode, "Subexpressions of leq does not match type Int");
-			this.set_type(TreeConstants.Object_);	//Si no son bools, se pone tipo Object para identificar el error
 		}
 		if ( !(this.e2.get_type()).equals(TreeConstants.Int) ) {
 			reportError(programTable, exprNode, "Subexpressions of leq does not match type Int");
-			this.set_type(TreeConstants.Object_);	//Si no son bools, se pone tipo Object para identificar el error
 		}
+		this.set_type(TreeConstants.Bool);
 	}
 }
 
@@ -1557,12 +1573,10 @@ class comp extends Expression {
 		/* Un error se reporta llamando a: reportError(programTable, exprNode, "El mensaje"); */
 		
 	    	e1.analyze(exprNode, programTable);
-	    	if ( (this.e1.get_type()).equals(TreeConstants.Bool) ) {
-			this.set_type(TreeConstants.Bool);
-		} else {
+	    	if ( !(this.e1.get_type()).equals(TreeConstants.Bool) ) {
 			reportError(programTable, exprNode, "Subexpression of compare does not match type Bool");
-			this.set_type(TreeConstants.Object_);	//Si no son ints, se pone tipo Object para identificar el error
 		}
+		this.set_type(TreeConstants.Bool);
 	}
 
 }
@@ -1870,6 +1884,3 @@ class object extends Expression {
 	// Finalizacion de constantes e ids
 	//
 	//-----------------------------------------------------------------------------------------
-
-
-
