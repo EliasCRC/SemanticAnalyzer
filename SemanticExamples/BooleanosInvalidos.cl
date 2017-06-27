@@ -13,9 +13,9 @@ class C {
 
 		if "a" = 1  then w <- false else w <- true fi;
 
-    if "a" <= w  then w <- false else w <- true fi;
+    		if "a" <= w  then w <- false else w <- true fi;
 
-    if 3 then w <- false else w <- true fi;
+    		if 3 then w <- false else w <- true fi;
 		self;
            }
 	};
