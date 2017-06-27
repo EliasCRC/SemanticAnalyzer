@@ -9,7 +9,7 @@ class C {
 
 		if 1 = 1 then w <- false else w <- true fi;
 
-		if w = w <  then w <- false else w <- true fi;
+		if w = w  then w <- false else w <- true fi;
 
 		if "a" = "a"  then w <- false else w <- true fi;
 
