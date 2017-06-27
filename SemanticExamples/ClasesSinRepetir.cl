@@ -2,4 +2,8 @@ class C {};
 
 class B {};
 
-Class Main{};
+Class Main {
+	main() : Bool {
+		true
+	};
+};

@@ -1,10 +1,9 @@
 class C {
 	x : Int;
-	w : Bool;
+	w : Bool <- true;
 
-	init() : C {
-           {
-
+	init() : Bool {
+           let z : Bool <- not w in {
 		if 1 < 2 then w <- false else w <- true fi;
 
 		if 1 = 1 then w <- false else w <- true fi;
@@ -13,11 +12,10 @@ class C {
 
 		if "a" = "a"  then w <- false else w <- true fi;
 
-    		if 1 <= 2  then w <- false else w <- true fi;
-
    		if w then w <- false else w <- true fi;
-		self;
-           }
+
+		w <- 1 <= 2; 
+		}
 	};
 };
 

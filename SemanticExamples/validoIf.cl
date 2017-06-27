@@ -1,4 +1,4 @@
-﻿class C {
+class C {
 	x : Int;
 	w : Bool;
 
