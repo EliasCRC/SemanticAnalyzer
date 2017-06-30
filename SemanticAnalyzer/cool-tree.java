@@ -1571,7 +1571,7 @@ class comp extends Expression {
 		
 	    	e1.analyze(exprNode, programTable);
 	    	if ( !(this.e1.get_type()).equals(TreeConstants.Bool) ) {
-			reportError(programTable, exprNode, "Subexpression of compare does not match type Bool");
+			reportError(programTable, exprNode, "Subexpression of complement does not match type Bool");
 		}
 		this.set_type(TreeConstants.Bool);
 	}
